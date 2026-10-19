@@ -1,0 +1,77 @@
+---
+/**
+ * CosmosWorld.astro
+ * ---------------------------------------------------------------------------
+ * The whole site as a map far larger than the screen. Point and go, Ken Burns
+ * tour, rack focus, physics title card, and a black hole at the edge.
+ *
+ * The map is rendered HERE, on the server, from the same code the client
+ * uses (world.js), so every module's text is in the HTML: indexable, and
+ * readable before JavaScript loads.
+ *
+ * Usage:
+ *   ---
+ *   import CosmosWorld from '../components/cosmos/CosmosWorld.astro';
+ *   import { getCosmosConfig, getCosmosModules } from '../lib/cosmos/content';
+ *   const config = await getCosmosConfig();
+ *   const modules = await getCosmosModules();
+ *   const shots = await getCosmosShots();
+ *   ---
+ *   <CosmosWorld id="world" config={config} modules={modules} shots={shots} subline="Studio of Jonathan Mark Reback" />
+ *   {import.meta.env.DEV && <IllusionAdmin target="world" />}
+ *
+ * Props:
+ *   config    partial cosmos config (validated against COSMOS_SCHEMA)
+ *   modules   [{ id, title, summary, items: [{ id, title, body, shot? }] }], most prominent first
+ *   shots     pre-planned camera moves (format in src/lib/cosmos/shots.js)
+ *   subline   line under the site title on the title card
+ *   persist   keep admin experiments in this browser
+ *   class     sizing; the world fills its box (default: the full viewport)
+ */
+import '../../styles/global.css';
+import { COSMOS_CONFIG } from '../../lib/cosmos/schema.js';
+import { worldModel } from '../../lib/cosmos/world.js';
+import { cosmosMarkup } from '../../lib/cosmos/cosmos.js';
+import { SAMPLE_MODULES, SAMPLE_SHOTS } from '../../lib/cosmos/sample-content.js';
+import type { Shot } from '../../lib/cosmos/shots.js';
+
+interface Props {
+  config?: Record<string, unknown>;
+  modules?: typeof SAMPLE_MODULES;
+  shots?: Shot[];
+  subline?: string;
+  id?: string;
+  persist?: boolean;
+  class?: string;
+  base?: string;
+}
+
+const { config = {}, modules = SAMPLE_MODULES, shots = SAMPLE_SHOTS, subline = '', id = 'world', persist = false, class: className, base = import.meta.env.BASE_URL } = Astro.props;
+const cfg = COSMOS_CONFIG.merge(config);
+const html = cosmosMarkup(worldModel(cfg.seed, modules), cfg, subline, { base });
+// The page already contains every place in full. The browser only needs ids and
+// titles to run the tour; the full content is shipped only in development, where
+// the admin panel can rebuild the world when the seed changes.
+const forClient = import.meta.env.DEV
+  ? modules
+  : modules.map((m) => ({ id: m.id, title: m.title, summary: m.summary, items: m.items.map((i) => ({ id: i.id, title: i.title })) }));
+---
+
+<main
+  id={id}
+  class:list={['cos h-dvh', className]}
+  data-cosmos
+  data-seed={cfg.seed}
+  data-config={JSON.stringify(cfg)}
+  data-modules={JSON.stringify(forClient)}
+  data-base={base}
+  data-shots={JSON.stringify(shots)}
+  data-subline={subline}
+  data-persist={persist ? '' : undefined}
+  aria-label="Map of the studio"
+  set:html={html}
+/>
+
+<script>
+  import '../../lib/cosmos/boot.js';
+</script>

@@ -1,0 +1,39 @@
+/* ==========================================================================
+   analog.tailwind.css — Tailwind v4 utilities for the analog finish
+   --------------------------------------------------------------------------
+   Import after tailwindcss and analog.css:
+     @import "tailwindcss";
+     @import "./analog.css";
+     @import "./analog.tailwind.css";
+   Then: <button class="an-key px-4 py-2">, <div class="an-plaque p-6">,
+         <h1 class="font-display an-deboss">, <span class="an-lcd px-2">
+   ========================================================================== */
+
+@theme {
+  --font-display: 'Jost', 'Futura', 'Century Gothic', sans-serif;     /* OPTION: 'Big Shoulders Display' */
+  --font-label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-mono: 'Courier Prime', 'Courier New', monospace;            /* OPTION: 'IBM Plex Mono' */
+  --font-typewriter: 'Special Elite', 'Courier New', monospace;
+  --shadow-lift: 0 12px 0 -4px rgb(0 0 0 / 0.35), 0 22px 40px rgb(0 0 0 / 0.45);
+  --shadow-key: inset 0 1px 0 #fff, 0 4px 0 #000, 0 7px 10px rgb(0 0 0 / 0.35);
+  --shadow-well: inset 0 2px 6px rgb(0 0 0 / 0.8);
+}
+
+/* The component classes in analog.css work as-is; these add composable pieces. */
+@utility text-deboss {
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.75), 0 -1px 0 rgb(0 0 0 / 0.25);
+}
+@utility text-emboss {
+  text-shadow: -1px -1px 0 rgb(255 255 255 / 0.55), 1px 2px 0 rgb(0 0 0 / 0.35);
+}
+@utility text-phosphor {
+  text-shadow: 0 0 6px rgb(245 211 22 / 0.55);
+}
+@utility bg-grain {
+  background-image: var(--an-weave);
+  background-size: 240px 240px;
+}
+@utility press {
+  /* Key travel on press, for any element with shadow-key */
+  &:active { transform: translateY(3px); box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.25), 0 1px 0 #000; }
+}

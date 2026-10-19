@@ -1,0 +1,56 @@
+{
+  "trigger": "click",
+  "route": "projects",
+  "idleSeconds": 60,
+  "loop": false,
+  "steps": [
+    {
+      "to": "projects",
+      "fit": "frame",
+      "speed": 0.8,
+      "ease": "",
+      "hold": 2.5,
+      "push": 1.06,
+      "panX": 0,
+      "panY": 0,
+      "focus": "map",
+      "title": ""
+    },
+    {
+      "to": "projects/tesla",
+      "fit": "fill",
+      "speed": 1.1,
+      "ease": "expo",
+      "hold": 3,
+      "push": 1.1,
+      "panX": 0.03,
+      "panY": 0,
+      "focus": "map",
+      "title": ""
+    },
+    {
+      "to": "projects/uber",
+      "fit": "fill",
+      "speed": 1.1,
+      "ease": "expo",
+      "hold": 3,
+      "push": 1.1,
+      "panX": -0.03,
+      "panY": 0,
+      "focus": "map",
+      "title": ""
+    },
+    {
+      "to": "projects",
+      "fit": "frame",
+      "speed": 0.9,
+      "ease": "cubic",
+      "hold": 0,
+      "push": 1,
+      "panX": 0,
+      "panY": 0,
+      "focus": "map",
+      "title": ""
+    }
+  ]
+}

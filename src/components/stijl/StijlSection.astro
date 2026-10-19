@@ -1,0 +1,11 @@
+---
+/**
+ * StijlSection.astro — any list of items as a self-assembling composition.
+ *   <StijlSection items={[{ id, title, summary, href, kicker, weight, tone }]} seed={7} label="Projects" />
+ * Items may carry `html` instead of card fields. See src/lib/stijl/compose.js.
+ */
+import { renderSection } from '../../lib/stijl/compose.js';
+interface Props { items: any[]; seed?: number; wide?: number; tall?: number; label?: string; compose?: Record<string, number> }
+const { items, seed = 1917, wide = 1.6, tall = 0.5, label = '', compose = {} } = Astro.props;
+---
+<Fragment set:html={renderSection({ items, seed, wide, tall, label, compose })} />

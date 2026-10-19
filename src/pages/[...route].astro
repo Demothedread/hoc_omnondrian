@@ -1,0 +1,21 @@
+---
+/**
+ * Every place in the world gets its own address, rendered as the same world
+ * opened at that place: /projects, /projects/tesla, /projects/tesla/3,
+ * /projects/tesla/report, /gallery/photo-2, /ideas/welcome, /resume/experience …
+ * The list comes from the content itself (worldRoutes in cosmos/world.js), so
+ * a new project, post or photo in the CMS gets its pages on the next build.
+ */
+import WorldPage from '../components/cosmos/WorldPage.astro';
+import { getCosmosModules } from '../lib/cosmos/content';
+import { worldRoutes } from '../lib/cosmos/world.js';
+
+export async function getStaticPaths() {
+  const modules = await getCosmosModules();
+  return worldRoutes(modules)
+    .filter((p) => p.route)                                   // '' is pages/index.astro
+    .map((p) => ({ params: { route: p.route }, props: p }));
+}
+const { route, title, description } = Astro.props;
+---
+<WorldPage route={route} title={title} description={description} />

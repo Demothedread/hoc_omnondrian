@@ -1,0 +1,50 @@
+{
+  "summary": "[Placeholder] A sentence that frames the resumé.",
+  "sections": [
+    {
+      "heading": "Experience",
+      "entries": [
+        {
+          "title": "[Placeholder] Role",
+          "org": "Organisation",
+          "dates": "Years",
+          "note": "What you did there."
+        },
+        {
+          "title": "[Placeholder] Role",
+          "org": "Organisation",
+          "dates": "Years",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "heading": "Education",
+      "entries": [
+        {
+          "title": "[Placeholder] Degree",
+          "org": "School",
+          "dates": "Year",
+          "note": ""
+        }
+      ]
+    },
+    {
+      "heading": "Skills",
+      "entries": [
+        {
+          "title": "[Placeholder] Skill",
+          "org": "",
+          "dates": "",
+          "note": ""
+        },
+        {
+          "title": "[Placeholder] Skill",
+          "org": "",
+          "dates": "",
+          "note": ""
+        }
+      ]
+    }
+  ]
+}

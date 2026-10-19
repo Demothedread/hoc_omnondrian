@@ -1,0 +1,49 @@
+{
+  "name": "hoc-omnia-nihil-est",
+  "description": "Portfolio of Jonathan Mark Reback: a De Stijl site with a no-code CMS",
+  "type": "module",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "import": "node scripts/import-project.mjs",
+    "test": "node test/compose.test.mjs && node test/doc-to-deck.test.mjs && node test/import.test.mjs && node test/world.test.mjs",
+    "demo": "python3 demo/build.py"
+  },
+  "dependencies": {
+    "@astrojs/markdoc": "^2.1.0",
+    "@astrojs/react": "^7.1.0",
+    "@astrojs/rss": "^4.0.19",
+    "@keystatic/astro": "^5.0.0",
+    "@keystatic/core": "^0.5.0",
+    "@markdoc/markdoc": "^0.4.0",
+    "@spotlightjs/astro": "^3.2.6",
+    "@tailwindcss/vite": "^4.0.0",
+    "astro": "^7.4.0",
+    "motion": "^12.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^4.0.0",
+    "three": "^0.178.0"
+  },
+  "optionalDependencies": {
+    "@astrojs/vercel": "^11.0.15",
+    "mammoth": "^1.8.0"
+  },
+  "engines": {
+    "node": ">=18.20.8"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^26.6.5",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@types/three": "^0.178.1",
+    "typescript": "^5.9.3"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}

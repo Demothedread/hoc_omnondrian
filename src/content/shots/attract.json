@@ -1,0 +1,44 @@
+{
+  "trigger": "idle",
+  "route": "",
+  "idleSeconds": 60,
+  "loop": true,
+  "steps": [
+    {
+      "to": "overview",
+      "fit": "",
+      "speed": 0.6,
+      "ease": "",
+      "hold": 6,
+      "push": 1.14,
+      "panX": 0,
+      "panY": 0,
+      "focus": "map",
+      "title": ""
+    },
+    {
+      "to": "gallery",
+      "fit": "frame",
+      "speed": 0.6,
+      "ease": "",
+      "hold": 6,
+      "push": 1.12,
+      "panX": 0,
+      "panY": 0,
+      "focus": "map",
+      "title": ""
+    },
+    {
+      "to": "ideas",
+      "fit": "frame",
+      "speed": 0.6,
+      "ease": "",
+      "hold": 6,
+      "push": 1.12,
+      "panX": 0.03,
+      "panY": 0.02,
+      "focus": "map",
+      "title": ""
+    }
+  ]
+}

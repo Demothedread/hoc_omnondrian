@@ -1,0 +1,76 @@
+{
+  "photos": [
+    {
+      "image": "/images/gallery/sample-1.svg",
+      "alt": "Sample horizon study 1",
+      "caption": "Sample image 1. Replace with a photograph in the CMS.",
+      "weight": 1.6
+    },
+    {
+      "image": "/images/gallery/sample-2.svg",
+      "alt": "Sample horizon study 2",
+      "caption": "Sample image 2. Replace with a photograph in the CMS.",
+      "weight": 1
+    },
+    {
+      "image": "/images/gallery/sample-3.svg",
+      "alt": "Sample horizon study 3",
+      "caption": "Sample image 3. Replace with a photograph in the CMS.",
+      "weight": 1
+    },
+    {
+      "image": "/images/gallery/sample-4.svg",
+      "alt": "Sample horizon study 4",
+      "caption": "Sample image 4. Replace with a photograph in the CMS.",
+      "weight": 1
+    },
+    {
+      "image": "/images/gallery/sample-5.svg",
+      "alt": "Sample horizon study 5",
+      "caption": "Sample image 5. Replace with a photograph in the CMS.",
+      "weight": 1.6
+    },
+    {
+      "image": "/images/gallery/sample-6.svg",
+      "alt": "Sample horizon study 6",
+      "caption": "Sample image 6. Replace with a photograph in the CMS.",
+      "weight": 1
+    },
+    {
+      "image": "/images/gallery/sample-7.svg",
+      "alt": "Sample horizon study 7",
+      "caption": "Sample image 7. Replace with a photograph in the CMS.",
+      "weight": 1
+    },
+    {
+      "image": "/images/gallery/sample-8.svg",
+      "alt": "Sample horizon study 8",
+      "caption": "Sample image 8. Replace with a photograph in the CMS.",
+      "weight": 1
+    },
+    {
+      "image": "/images/gallery/sample-9.svg",
+      "alt": "Sample horizon study 9",
+      "caption": "Sample image 9. Replace with a photograph in the CMS.",
+      "weight": 1.6
+    },
+    {
+      "image": "/images/gallery/sample-10.svg",
+      "alt": "Sample horizon study 10",
+      "caption": "Sample image 10. Replace with a photograph in the CMS.",
+      "weight": 1
+    },
+    {
+      "image": "/images/gallery/sample-11.svg",
+      "alt": "Sample horizon study 11",
+      "caption": "Sample image 11. Replace with a photograph in the CMS.",
+      "weight": 1
+    },
+    {
+      "image": "/images/gallery/sample-12.svg",
+      "alt": "Sample horizon study 12",
+      "caption": "Sample image 12. Replace with a photograph in the CMS.",
+      "weight": 1
+    }
+  ]
+}

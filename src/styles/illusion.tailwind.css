@@ -1,0 +1,66 @@
+/* ==========================================================================
+   illusion.tailwind.css — Tailwind v4 layer for the illusion kit
+   --------------------------------------------------------------------------
+   Add to your global stylesheet, after Tailwind:
+
+     @import "tailwindcss";
+     @import "./illusion.tailwind.css";
+
+   (illusion.css itself is imported by IllusionStage.astro, so pages without
+   a stage don't ship it.)
+
+   What this adds:
+     • De Stijl colors and the two type roles as theme tokens
+       → bg-stijl-red, text-stijl-ink, border-stijl-ink, font-display …
+     • Illusion utilities for use anywhere on the site, outside the stage:
+       drift-rail, drift-rail-{n}, ouchi-field, ouchi-letters, chromo-float
+   ========================================================================== */
+
+@theme {
+  --color-stijl-red: #d40920;
+  --color-stijl-blue: #1356a2;
+  --color-stijl-yellow: #f5d316;
+  --color-stijl-ink: #000000;
+  --color-stijl-paper: #eeeeea;
+  --color-stijl-gray: #9a9a96;
+
+  --font-display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --font-text: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* A dividing line that seems to travel although nothing moves.
+   Use on any thick rule:  <hr class="h-3 border-0 drift-rail" />
+   OPTION: drift-rail-40 for a longer, slower-looking step (period in px). */
+@utility drift-rail {
+  --_p: 30px;
+  background-image: repeating-linear-gradient(90deg,
+      var(--color-stijl-ink) 0 calc(var(--_p) * 0.3),
+      var(--color-stijl-blue) 0 calc(var(--_p) * 0.5),
+      var(--color-stijl-paper) 0 calc(var(--_p) * 0.8),
+      var(--color-stijl-yellow) 0 var(--_p));
+}
+@utility drift-rail-* {
+  --_p: calc(--value(integer) * 1px);
+}
+
+/* Ouchi pair: put an ouchi-letters element (or any shape) inside an
+   ouchi-field and it will seem to float when the page scrolls.
+   OPTION: override --ill-brick / --ill-aspect inline to change brick size. */
+@utility ouchi-field {
+  background-image: repeating-conic-gradient(var(--color-stijl-ink) 0 25%, var(--color-stijl-paper) 0 50%);
+  background-size: calc(var(--ill-brick, 10px) * var(--ill-aspect, 4) * 2) calc(var(--ill-brick, 10px) * 2);
+}
+@utility ouchi-letters {
+  background-image: repeating-conic-gradient(var(--color-stijl-ink) 0 25%, var(--color-stijl-paper) 0 50%);
+  background-size: calc(var(--ill-brick, 10px) * 2) calc(var(--ill-brick, 10px) * var(--ill-aspect, 4) * 2);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Red that sits in front of its blue field (chromostereopsis).
+   OPTION: pair with bg-stijl-ink instead of the built-in blue. */
+@utility chromo-float {
+  color: #ff2a1a;
+  background-color: #0a2fb8;
+}

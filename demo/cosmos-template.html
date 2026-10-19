@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cosmos — Hoc omnia nihil est</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;800&family=Barlow+Condensed:wght@500;600&family=Courier+Prime:wght@400;700&family=Special+Elite&family=Big+Shoulders+Display:wght@800;900&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* ---- demo page shell (the kit's own CSS follows) ---- */
+:root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); color-scheme: light dark; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { height: 100%; margin: 0; }
+body { background: #000; }
+.lab { display: grid; grid-template-columns: minmax(0, 1fr) 0; height: 100%; }
+.lab.is-open { grid-template-columns: minmax(0, 1fr) min(360px, 40vw); }
+.lab > .ill-stage, .lab > .cos { height: 100%; min-height: 0; }
+.lab__panel { min-height: 0; overflow: hidden; }
+.lab:not(.is-open) .lab__panel { visibility: hidden; }
+.lab__open {
+  position: fixed; top: calc(env(safe-area-inset-top, 0px) + 72px); right: 16px; z-index: 40;
+  min-height: 40px; padding: 8px 14px; font: 600 14px/1 "Instrument Sans", Arial, sans-serif;
+  color: #000; background: #eeeeea; border: 4px solid #000; cursor: pointer;
+}
+.lab__open:focus-visible { outline: 3px solid #d40920; outline-offset: 2px; }
+@media (max-width: 760px) {
+  .lab, .lab.is-open { grid-template-columns: minmax(0, 1fr); }
+  .lab__panel { position: absolute; inset: auto 0 0 0; height: 58%; z-index: 30; padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .lab__panel .ill-admin { border-left: 0; border-top: 6px solid #000; }
+}
+%%CSS%%
+</style>
+</head>
+<body>
+<div class="lab">
+  <main class="cos" data-cosmos aria-label="Map of the studio"></main>
+  <aside class="lab__panel" id="ill-admin" aria-label="Cosmos controls"></aside>
+</div>
+<button type="button" class="lab__open" aria-controls="ill-admin" aria-expanded="false" hidden>Controls</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- The photo viewer's particle globe is an ES module, loaded when a photo first opens. -->
+<script type="importmap">
+{ "imports": {
+  "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.webgpu.js",
+  "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.tsl.js",
+  "motion": "https://cdn.jsdelivr.net/npm/motion@12.0.0/+esm"
+} }
+</script>
+<script>
+window.__particleGlobe = new Promise((resolve) => { window.__resolveParticleGlobe = resolve; });
+%%JS%%
+
+/* ---- demo boot (in Astro this lives in CosmosWorld.astro / IllusionAdmin.astro) ---- */
+(() => {
+  const lab = document.querySelector('.lab');
+  const root = document.querySelector('.cos');
+  const panel = document.querySelector('#ill-admin');
+  const openBtn = document.querySelector('.lab__open');
+  const store = createIllusionStore({}, { storageKey: 'cos:lab', config: COSMOS_CONFIG });
+  window.cosmos = createCosmos(root, store, { modules: SAMPLE_MODULES, shots: SAMPLE_SHOTS, subline: 'Studio of Jonathan Mark Reback', base: '#/', particles: () => window.__particleGlobe });
+
+  function setOpen(open) {
+    lab.classList.toggle('is-open', open);
+    openBtn.hidden = open;
+    openBtn.setAttribute('aria-expanded', String(open));
+    if (open) panel.querySelector('select, input')?.focus({ preventScroll: true });
+    else openBtn.focus({ preventScroll: true });
+  }
+  mountAdmin(panel, store, { onClose: () => setOpen(false), title: 'Cosmos controls' });
+  bindAdminShortcut(() => setOpen(!lab.classList.contains('is-open')));
+  openBtn.addEventListener('click', () => setOpen(true));
+  const startOpen = !matchMedia('(max-width: 760px)').matches;
+  lab.classList.toggle('is-open', startOpen);
+  openBtn.hidden = startOpen;
+})();
+</script>
+<script type="module">
+%%MODULE%%
+window.__resolveParticleGlobe({ mountParticleGlobe });
+</script>
+</body>
+</html>

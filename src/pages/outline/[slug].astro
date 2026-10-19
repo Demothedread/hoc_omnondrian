@@ -1,0 +1,21 @@
+---
+/** /outline/<project> — author tool: the slides a project's document became, with the rule behind each block. */
+import StijlPage from '../../layouts/StijlPage.astro';
+import { renderOutline } from '../../lib/stijl/presentation.js';
+import { getProjects } from '../../lib/site/content';
+export async function getStaticPaths() {
+  return (await getProjects()).map((project) => ({ params: { slug: project.slug }, props: { project } }));
+}
+const { project } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+<StijlPage title={`${project.title}: outline`}>
+  <main class="stijl-page">
+    <div class="stijl-page__head">
+      <h1 class="stijl-page__title">{project.title}: outline</h1>
+      <div class="mode-switch"><a class="an-key" href={`${base}projects/${project.slug}`}>Open in the map</a></div>
+    </div>
+    <p class="stijl-page__lede">Each slide, each block, and the rule that produced it from the document. Change the document in the CMS and this page follows.</p>
+    <Fragment set:html={renderOutline(project)} />
+  </main>
+</StijlPage>

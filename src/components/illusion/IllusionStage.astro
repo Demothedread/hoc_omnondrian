@@ -1,0 +1,64 @@
+---
+/**
+ * IllusionStage.astro
+ * ---------------------------------------------------------------------------
+ * A full-bleed section that renders one background illusion and one headline
+ * effect, driven by config from the CMS.
+ *
+ * Usage:
+ *   ---
+ *   import IllusionStage from '../components/illusion/IllusionStage.astro';
+ *   import { getIllusionConfig } from '../lib/illusion/content';
+ *   const illusion = await getIllusionConfig();
+ *   ---
+ *   <IllusionStage id="home-stage" config={illusion} />
+ *
+ * Props:
+ *   config   partial config (unknown keys are dropped, values clamped)
+ *   id       stable id; needed for the admin panel and for `persist`
+ *   persist  keep admin experiments in this browser across reloads
+ *   as       heading element for the headline (default h1)
+ *   class    extra classes, e.g. Tailwind sizing: "min-h-[80dvh]"
+ *
+ * The HTML is meaningful before JavaScript runs: the headline is real text,
+ * so the page is readable, indexable, and fine without scripts.
+ */
+import '../../styles/illusion.css';
+import { mergeConfig } from '../../lib/illusion/config.js';
+
+interface Props {
+  config?: Record<string, unknown>;
+  id?: string;
+  persist?: boolean;
+  as?: 'h1' | 'h2' | 'h3';
+  class?: string;
+}
+
+const { config = {}, id = 'illusion-stage', persist = false, as: Heading = 'h1', class: className } = Astro.props;
+const cfg = mergeConfig(config);
+---
+
+<section
+  id={id}
+  class:list={['ill-stage min-h-dvh', className]}
+  data-ill-stage
+  data-config={JSON.stringify(cfg)}
+  data-persist={persist ? '' : undefined}
+  data-bg={cfg.bgMode}
+  data-effect={cfg.textEffect}
+  data-frame={cfg.frameStyle}
+  aria-labelledby={`${id}-title`}
+>
+  <div class="ill-bg" data-ill-bg aria-hidden="true"></div>
+
+  <div class="ill-copy">
+    <Heading id={`${id}-title`} class="ill-headline" data-ill-headline>{cfg.headline}</Heading>
+    {cfg.subline && <p class="ill-sub" data-ill-subline>{cfg.subline}</p>}
+    <slot />
+  </div>
+</section>
+
+<script>
+  // Bundled once per page by Astro, however many stages there are.
+  import '../../lib/illusion/boot.js';
+</script>

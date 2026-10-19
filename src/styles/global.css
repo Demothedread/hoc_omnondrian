@@ -1,0 +1,17 @@
+/* ==========================================================================
+   global.css — everything the site's pages share
+   Tailwind v4 first, then the site's style layers, then Tailwind theme
+   extensions (stijl colours, analog fonts, shadows and utilities).
+   ========================================================================== */
+@import "tailwindcss";
+@import "./illusion.css";
+@import "./analog.css";
+@import "./stijl.css";
+@import "./cosmos.css";
+@import "./illusion-admin.css";
+@import "./illusion.tailwind.css";
+@import "./analog.tailwind.css";
+
+html { background: var(--ill-paper, #eeeeea); color: var(--ill-ink, #000); }
+body { margin: 0; font-family: var(--ill-text-font, system-ui, sans-serif); }
+:focus-visible { outline: 3px solid var(--ill-red, #d40920); outline-offset: 2px; }

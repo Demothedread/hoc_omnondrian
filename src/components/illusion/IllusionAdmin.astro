@@ -1,0 +1,108 @@
+---
+/**
+ * IllusionAdmin.astro
+ * ---------------------------------------------------------------------------
+ * Live controls for a stage. Render it only where editors should see it:
+ *
+ *   {import.meta.env.DEV && <IllusionAdmin target="home-stage" />}
+ *
+ * Published values live in the CMS (Keystatic UI at /keystatic). This panel
+ * is for finding them: experiment live, press "Copy settings", then paste
+ * the JSON into src/content/illusion/index.json or set the same fields in
+ * the Keystatic form.
+ *
+ * Works for both IllusionStage and CosmosWorld: the panel builds itself
+ * from whichever schema the target's store carries.
+ *
+ * Props:
+ *   target   id of the IllusionStage or CosmosWorld to control
+ *   title    panel heading (default "Controls")
+ *   open     start expanded on desktop (default true; phones start closed)
+ *
+ * Keyboard: Alt+Shift+I toggles the panel.
+ */
+import '../../styles/illusion-admin.css';
+
+interface Props {
+  target: string;
+  open?: boolean;
+  title?: string;
+}
+const { target, open = true, title = 'Controls' } = Astro.props;
+---
+
+<div class="ill-admin-dock" data-ill-admin-dock data-target={target} data-title={title} data-open={open ? 'true' : 'false'}>
+  <button type="button" class="ill-admin-dock__open" aria-controls={`${target}-admin`} aria-expanded={open ? 'true' : 'false'}>
+    Controls
+  </button>
+  <aside id={`${target}-admin`} class="ill-admin-dock__panel" aria-label="Illusion controls"></aside>
+</div>
+
+<style>
+  /* Docked right on desktop, a bottom sheet on phones.
+     OPTION: swap `right: 0` for `left: 0` to dock on the other side. */
+  .ill-admin-dock__panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    width: min(360px, 92vw);
+  }
+  .ill-admin-dock[data-open='false'] .ill-admin-dock__panel { display: none; }
+  .ill-admin-dock[data-open='true'] .ill-admin-dock__open { display: none; }
+  .ill-admin-dock__open {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 72px);   /* below the cosmos HUD */
+    right: 16px;
+    z-index: 60;
+    min-height: 40px;
+    padding: 8px 14px;
+    font: 600 14px/1 var(--font-text, system-ui, sans-serif);
+    color: #000;
+    background: #eeeeea;
+    border: 4px solid #000;
+    cursor: pointer;
+  }
+  .ill-admin-dock__open:focus-visible { outline: 3px solid #d40920; outline-offset: 2px; }
+  @media (max-width: 760px) {
+    .ill-admin-dock__panel { top: auto; left: 0; width: auto; height: 58dvh; }
+    .ill-admin-dock__panel :global(.ill-admin) { border-left: 0; border-top: 6px solid #000; }
+  }
+</style>
+
+<script>
+  import { mountAdmin, bindAdminShortcut } from '../../lib/illusion/admin.js';
+  import { getStage } from '../../lib/illusion/boot.js';
+
+  function attach(dock: HTMLElement) {
+    if (dock.dataset.bound) return;
+    const stageEl = document.getElementById(dock.dataset.target ?? '');
+    const entry = stageEl && getStage(stageEl);
+    if (!entry) return; // stage not booted yet; "illusion:ready" will call again
+    dock.dataset.bound = 'true';
+
+    const panel = dock.querySelector('aside') as HTMLElement;
+    const openBtn = dock.querySelector('.ill-admin-dock__open') as HTMLButtonElement;
+    const setOpen = (open: boolean) => {
+      dock.dataset.open = String(open);
+      openBtn.setAttribute('aria-expanded', String(open));
+      const focusTarget = open ? panel.querySelector<HTMLElement>('select, input') : openBtn;
+      focusTarget?.focus({ preventScroll: true });
+    };
+
+    mountAdmin(panel, entry.store, { onClose: () => setOpen(false), title: dock.dataset.title });
+    bindAdminShortcut(() => setOpen(dock.dataset.open !== 'true'));
+    openBtn.addEventListener('click', () => setOpen(true));
+    if (matchMedia('(max-width: 760px)').matches) {
+      // Phones start closed, without moving focus on page load.
+      dock.dataset.open = 'false';
+      openBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  const attachAll = () => document.querySelectorAll<HTMLElement>('[data-ill-admin-dock]').forEach(attach);
+  document.addEventListener('illusion:ready', attachAll);
+  document.addEventListener('astro:page-load', attachAll);
+  attachAll();
+</script>

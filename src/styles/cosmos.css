@@ -1,0 +1,512 @@
+/* ==========================================================================
+   cosmos.css — the world, its camera layers, title card, HUD and the hole
+   --------------------------------------------------------------------------
+   Requires illusion.css (tokens, .ill-sr, physics letter styles).
+   The camera writes three custom properties; everything else is static:
+     --cos-s         screen px per world unit (on .cos-plane)
+     --cos-rise      0–1, how far coloured fields have lifted (in flight)
+     --cos-breath    focus-breathing magnification (on .cos)
+     --cos-pressure  0–1, how hard the visitor is pushing past the edge
+   ========================================================================== */
+
+.cos {
+  --cos-ink: var(--ill-ink, #000);
+  --cos-paper: var(--ill-paper, #eeeeea);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  height: 100%;
+  min-height: 100%;
+  background: var(--cos-ink);
+  touch-action: none;              /* we handle pan and pinch ourselves */
+  font-family: var(--ill-text-font, system-ui, sans-serif);
+  color: var(--cos-ink);
+}
+
+/* ---------- Layers (each one is a depth plane for the rack focus) ------- */
+.cos-layer {
+  position: absolute;
+  inset: 0;
+  transform: scale(var(--cos-breath, 1));
+}
+.cos-layer--map {
+  perspective: 1400px;             /* OPTION: 900px exaggerates the tilt | 2400px flattens it */
+  perspective-origin: 50% 40%;
+  /* Pushing past the edge: the painting yields a little before you fall through. */
+  transform: scale(calc(var(--cos-breath, 1) * (1 - var(--cos-pressure, 0) * 0.09)));
+}
+.cos-layer--near { pointer-events: none; }
+
+/* Far layer: ink with paper and yellow stars; moves at 1/distance. */
+.cos-sky {
+  position: absolute;
+  inset: -25%;
+  background:
+    radial-gradient(circle, var(--cos-paper) 0 1px, transparent 1.6px) 0 0 / 37px 41px,
+    radial-gradient(circle, var(--ill-yellow, #f5d316) 0 1.2px, transparent 1.8px) 13px 7px / 113px 97px,
+    var(--cos-ink);
+    /* OPTION: replace with var(--cos-paper) for a daylight map with no sky */
+}
+
+/* ---------- World plane ------------------------------------------------ */
+.cos-plane {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  background: var(--cos-ink);      /* lines are the ground showing through */
+}
+.cos.is-moving .cos-plane { will-change: transform; }
+.cos.is-3d .cos-plane,
+.cos.is-3d .cos-region { transform-style: preserve-3d; }
+/* Coloured fields rise in flight (height in world units in --h). */
+.cos.is-3d .cos-cell { transform: translateZ(calc(var(--h, 0) * var(--cos-rise, 0) * 1px)); }
+
+.cos-region,
+.cos-cell {
+  position: absolute;
+  box-sizing: border-box;
+}
+.cos-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;       /* OPTION: flex-start — titles hang from the top */
+  overflow: hidden;
+  color: var(--cos-ink);
+  text-decoration: none;
+}
+a.cos-cell { cursor: zoom-in; }
+/* Focus ring stays 3 screen px whatever the zoom. */
+.cos-cell:focus-visible,
+.cos-region:focus-visible {
+  outline: calc(3px / var(--cos-s, 1)) solid var(--ill-red, #d40920);
+  outline-offset: calc(-6px / var(--cos-s, 1));
+}
+
+.cos-h2,
+.cos-h3 {
+  margin: 0;
+  font-family: var(--ill-display, sans-serif);
+  font-weight: 900;
+  line-height: 0.88;
+  text-wrap: balance;
+}
+.cos-h3 { font-weight: 800; }
+.cos-p {
+  margin: 0.7em 0 0;
+  max-width: 36em;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+/* Level of detail in pure CSS: fade in above ~7 screen px, out above ~1400. */
+.cos-lod {
+  opacity: min(
+    clamp(0, calc((var(--fs) * var(--cos-s, 1) - 7) / 5), 1),
+    clamp(0, calc((1400 - var(--fs) * var(--cos-s, 1)) / 500), 1)
+  );
+}
+
+/* ---------- The singularity region ------------------------------------- */
+.cos-singularity {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4%;
+  background: var(--cos-paper);
+  color: var(--cos-ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+.cos-singularity__hole {
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  /* Shadow, then the thin photon ring, then the disk's hot inner edge. */
+  background: radial-gradient(circle,
+      var(--cos-ink) 0 60%, var(--ill-yellow, #f5d316) 61% 63%,
+      var(--ill-red, #d40920) 64% 72%, transparent 73%);
+}
+.cos-singularity__label {
+  font-family: var(--ill-display, sans-serif);
+  font-weight: 900;
+}
+
+/* ---------- Title card (near layer) ------------------------------------ */
+.cos-title {
+  position: absolute;
+  left: clamp(1rem, 4vw, 3.5rem);
+  bottom: calc(clamp(1rem, 4vw, 3.5rem) + env(safe-area-inset-bottom, 0px));
+  max-width: min(56vw, 50rem);
+  padding: clamp(0.8rem, 2vw, 1.5rem) clamp(1rem, 2.4vw, 1.9rem);
+  background: var(--cos-paper);
+  border: var(--ill-rule, 12px) solid var(--cos-ink);
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.cos.has-title .cos-title { opacity: 1; }
+/* After focus racks back to the map, the card recedes so content underneath
+   stays readable. Hover brings it back. OPTION: 0 to hide it entirely. */
+.cos.has-title.is-receded .cos-title { opacity: 0.5; }
+.cos.has-title.is-receded .cos-title:hover { opacity: 1; }
+.cos-title__text {
+  margin: 0;
+  font-family: var(--ill-display, sans-serif);
+  font-weight: 900;
+  font-size: clamp(2.4rem, 7vw, 6.5rem);   /* OPTION: clamp(2rem, 5vw, 4.5rem) — quieter card */
+  line-height: 0.88;
+}
+.cos-title__sub {
+  margin: 0.6rem 0 0;
+  max-width: 44ch;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.cos-title__sub:empty { display: none; }
+
+/* ---------- HUD -------------------------------------------------------- */
+.cos-hud {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 16px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+.cos-crumbs,
+.cos-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;   /* gaps between buttons pass gestures through to the map */
+}
+.cos-crumbs a,
+.cos-actions button { pointer-events: auto; }
+.cos-crumbs a,
+.cos-actions button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  font: 600 14px/1 var(--ill-text-font, system-ui, sans-serif);
+  color: var(--cos-ink);
+  text-decoration: none;
+  background: var(--cos-paper);
+  border: 4px solid var(--cos-ink);
+  cursor: pointer;
+}
+.cos-crumbs a[aria-current] { background: var(--ill-yellow, #f5d316); }
+.cos-actions button[aria-pressed="true"] { background: var(--ill-red, #d40920); color: var(--cos-paper); }
+.cos-crumbs a:focus-visible,
+.cos-actions button:focus-visible { outline: 3px solid var(--ill-red, #d40920); outline-offset: 2px; }
+
+.cos-hint {
+  position: absolute;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  max-width: 18rem;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  background: var(--cos-paper);
+  border: 3px solid var(--cos-ink);
+}
+@media (max-width: 760px) {
+  .cos-hint { display: none; }
+  .cos-title { max-width: calc(100vw - 2rem); }
+}
+
+/* ---------- The fall --------------------------------------------------- */
+.cos-hole {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  background: var(--cos-ink);
+  transition: opacity 0.6s ease;
+}
+.cos-hole canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.4s ease;
+}
+.cos-hole__readout {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 16px;
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cos-hole__readout span {
+  justify-self: start;
+  padding: 6px 10px;
+  background: var(--cos-paper);
+  border: 3px solid var(--cos-ink);
+}
+.cos.is-diving .cos-hole { opacity: 1; pointer-events: auto; }
+.cos.is-diving .cos-hud,
+.cos.is-diving .cos-hint { opacity: 0; pointer-events: none; }
+.cos.is-diving .cos-layer--map { visibility: hidden; transition: visibility 0s 0.6s; }
+.cos.is-diving .cos-layer--near { z-index: 15; }   /* title above the hole: tidal letters fall toward it */
+.cos.is-crossing .cos-hole canvas { opacity: 0; }
+.cos.is-lingering .cos-hole { cursor: pointer; }
+.cos-hole.is-fallback {
+  background:
+    radial-gradient(circle at 50% 50%, var(--cos-ink) 0 13vmin, var(--ill-yellow, #f5d316) 13.4vmin 14.2vmin, var(--ill-red, #d40920) 14.6vmin 17vmin, transparent 18vmin),
+    var(--cos-paper);
+}
+.cos-hole.is-fallback canvas { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cos-title, .cos-hole, .cos-hole canvas, .cos-hud { transition-duration: 0.01s; }
+}
+.cos.is-reduced-motion .cos-title,
+.cos.is-reduced-motion .cos-hole,
+.cos.is-reduced-motion .cos-hole canvas { transition-duration: 0.01s; }
+
+/* ---------- Colour fields as content containers ------------------------ */
+.cos-cell[data-tone="light"] { color: var(--cos-paper); }   /* paper text on red and blue */
+.cos-cell[data-tone="light"] .cos-p { font-weight: 600; }    /* OPTION: 500 if your red passes contrast at size */
+/* Arrival: fill — a field covers the screen, so its content sits centred and
+   never wider than the visible part (--cos-view-w is set on arrival). */
+.cos--fill .cos-cell--item { justify-content: center; align-items: center; }
+.cos-cell__body {
+  max-width: min(calc(var(--bw) * 1px), calc(var(--cos-view-w, 100000) * 0.86px));
+}
+.cos--fill.has-title.is-receded .cos-title { opacity: 0; pointer-events: none; }   /* the filled field is its own headline */
+
+/* ---------- The warp home (three.js canvas) ----------------------------- */
+.cos-warp {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;     /* OPTION: 0s for a hard cut back to the page */
+}
+.cos-warp__canvas { display: block; width: 100%; height: 100%; }
+.cos.is-warping .cos-warp { opacity: 1; pointer-events: auto; transition: none; }
+.cos.is-warping .cos-hud,
+.cos.is-warping .cos-hint { opacity: 0; pointer-events: none; }
+
+/* No WebGL or reduced motion: a quick fade through ink instead. */
+.cos-layer { transition: opacity 0.25s ease; }
+.cos.is-passing-cut .cos-layer { opacity: 0; }
+/* While the warp covers the screen, stop painting what's underneath (layout is
+   kept, so the home snapshot still measures correctly). */
+.cos.is-warping .cos-layer,
+.cos.is-warping .cos-hole { visibility: hidden; }
+
+/* ==========================================================================
+   Analog finish (Finish: analog → .cos--analog). Needs analog.css.
+   ========================================================================== */
+.cos-film { z-index: 32; display: none; }
+.cos--analog .cos-film { display: block; }
+.cos-hud { z-index: 34; }
+.cos-hint, .cos-strip { z-index: 34; }
+.cos--analog .cos-hud { top: calc(env(safe-area-inset-top, 0px) + var(--an-bezel) + 12px); left: calc(var(--an-bezel) + 12px); right: calc(var(--an-bezel) + 12px); }
+.cos--analog .cos-hint { right: calc(var(--an-bezel) + 12px); bottom: calc(var(--an-bezel) + 44px); }
+
+/* The painting's relief comes from embossed fields (below). A canvas-weave
+   texture over the world was tried and dropped: a texture layer the size of the
+   world has to be repainted at every zoom, which made flights stutter. The
+   paper texture lives on small, still things instead (plaque, keys). */
+.cos--analog.cos--emboss .cos-cell,
+.cos--analog.cos--emboss .cos-singularity {
+  box-shadow:
+    inset 5px 5px 0 rgba(255, 255, 255, 0.22),
+    inset -6px -6px 0 rgba(0, 0, 0, 0.16),
+    inset 0 0 30px rgba(0, 0, 0, 0.14);
+}
+/* Rising fields cast shadows onto the map while in flight. */
+.cos--analog.is-3d .cos-cell[style*="--h"] { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 18px 24px 30px rgba(0, 0, 0, 0.35); }
+
+/* Title plaque: keep the De Stijl rule, add screws (markup) and depth. */
+.cos--analog .cos-title { border-radius: 4px; }
+.cos-title .an-screw { display: none; }
+.cos--analog .cos-title .an-screw { display: block; }
+.cos--analog .cos-title { left: calc(var(--an-bezel) + clamp(1rem, 4vw, 3.5rem)); bottom: calc(var(--an-bezel) + clamp(2.6rem, 6vw, 4.5rem)); }
+
+/* Lens data strip on the bezel: focal length, aperture, focus, scale. */
+.cos-strip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--an-bezel) * 0.5 + 6px);
+  transform: translate(-50%, 50%);
+  display: none;
+  gap: 1.4em;
+  margin: 0;
+  padding: 4px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.cos--analog .cos-strip { display: flex; }
+.cos--analog .cos-hole__readout { top: calc(var(--an-bezel) + 12px); left: calc(var(--an-bezel) + 12px); }
+
+/* Gate weave: the picture (not the bezel) jitters a fraction of a pixel. */
+.cos--analog .cos-layer { translate: var(--an-wx, 0px) var(--an-wy, 0px); }
+
+/* ---------- Sky styles ---------------------------------------------------- */
+.cos-sky[data-sky="rings"] {
+  /* Pinna–Brelstaff rings: as you zoom, they appear to turn. */
+  background: var(--cos-rings) center / 900px 900px repeat, #8c8c88;
+}
+.cos-sky[data-sky="grid"] {
+  background:
+    radial-gradient(circle at 5px 5px, var(--cos-paper) 7px, transparent 7.6px) 0 0 / 60px 60px,
+    linear-gradient(90deg, #8c8c88 10px, transparent 0) 0 0 / 60px 60px,
+    linear-gradient(#8c8c88 10px, transparent 0) 0 0 / 60px 60px,
+    var(--cos-ink);
+}
+
+/* A field that opens a page: the "Open ↗" mark, and a pointer once you're there. */
+.cos-open { display: inline-block; margin-top: 0.6em; font-weight: 700; text-decoration: underline; text-underline-offset: 0.18em; }
+
+/* ==========================================================================
+   Everything lives in the world: projects, slides, reading, photos, cards
+   ========================================================================== */
+.cos-cell[data-route] { cursor: zoom-in; }
+.cos-cell.is-current { cursor: default; }
+.cos-kind-photo.is-current,
+.cos-kind-project.is-current { cursor: pointer; }
+.cos-item-link { color: inherit; text-decoration: none; }
+.cos-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Projects and cards: the title gives way to the nested composition as you approach.
+   --nw is the nested box's larger dimension in world units; × scale = its size on screen
+   (the larger one, so a tall narrow field opens as readily as a wide one). */
+.cos-cell--item[style*="--nw"] > .cos-cell__body {
+  opacity: clamp(0, calc((560 - var(--nw) * var(--cos-s, 1)) / 160), 1);
+}
+.cos-nest {
+  position: absolute;
+  opacity: clamp(0, calc((var(--nw) * var(--cos-s, 1) - 360) / 160), 1);
+}
+.cos-nest .stijl-wrap { width: 100%; }
+
+/* Inside the world, type follows its field (the camera makes it legible). */
+.cos-plane .stijl { --stijl-frame: 0px; }
+.cos-plane .stijl__item { padding: 3.2cqi 3.6cqi; gap: 0.6cqi; }
+.cos-plane .stijl__kicker { font-size: 1.5cqi; }
+.cos-plane .stijl__title { font-size: 4.6cqi; }
+.cos-plane .stijl__summary { font-size: 1.9cqi; -webkit-line-clamp: 6; }
+.cos-plane .stijl__meta { font-size: 1.4cqi; }
+.cos-plane .blk-heading { font-size: 6.2cqi; }
+.cos-plane .blk-subhead { font-size: 2.6cqi; }
+.cos-plane .blk-text,
+.cos-plane .blk-list { font-size: 1.9cqi; }
+.cos-plane .blk-quote { font-size: 2.8cqi; }
+.cos-plane .blk-placeholder { font-size: 1.6cqi; }
+.cos-plane .blk-stat { font-size: min(24cqi, 52cqh); }
+.cos-plane .blk-stat + .blk-text { font-size: 7cqi; }
+/* Card links only work once you're at the place (until then a click travels). */
+.cos-cell--item:not(.is-current) .stijl__title-link { pointer-events: none; }
+
+/* Slides (and the report field) fill their place in the project's composition. */
+.cos-nest .stijl__item:has(> .cos-slide),
+.cos-nest .stijl__item:has(> .cos-nested) { padding: 0; }
+.cos-slide,
+.cos-nested { position: absolute; inset: 0; display: block; color: inherit; text-decoration: none; }
+.cos-slide.is-current { outline: none; }
+.cos-nested { container-type: size; }          /* the label sizes to its own field, not the whole project */
+.cos-nest-label {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  bottom: 8%;
+  font: 800 min(10cqi, 16cqh)/0.95 var(--ill-display, system-ui, sans-serif);
+  text-wrap: balance;
+  color: inherit;
+  text-decoration: none;
+}
+.cos-nested.is-reading .cos-nest-label { opacity: 0; }
+
+/* Reading: a column at a steady ~19px on screen, scrolling inside its field. */
+.cos-read {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 0 4%;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  background: var(--cos-paper);
+  color: var(--cos-ink);
+  font: 400 calc(19px / var(--read-s, 1)) / 1.6 var(--ill-text-font, system-ui, sans-serif);  /* OPTION: 17px | 21px */
+  transition: opacity 0.35s ease;
+  scrollbar-width: thin;
+}
+.cos-read > * { max-width: 36em; margin-inline: auto; }
+.cos-read h1 { font: 800 2.4em/1 var(--ill-display, system-ui, sans-serif); margin: 1em auto 0.4em; }
+.cos-read h2 { font: 800 1.6em/1.05 var(--ill-display, system-ui, sans-serif); margin: 1.6em auto 0.5em; }
+.cos-read h3 { font: 700 1.2em/1.2 var(--ill-display, system-ui, sans-serif); }
+.cos-read blockquote { border-left: 0.5em solid var(--ill-yellow, #f5d316); padding-left: 0.8em; font-weight: 600; }
+.cos-read img { max-width: 100%; }
+.cos-read .report__stat { border-block-width: 0.3em; }
+.cos-read .report__stat strong { font-size: 2.6em; }
+.is-reading > .cos-read,
+.is-reading > .cos-nested .cos-read { opacity: 1; overflow-y: auto; pointer-events: auto; overscroll-behavior: contain; }
+.cos-read:focus { outline: none; }
+
+/* Photos: the photograph, under a painted cover of Mondrian shards. */
+.cos-kind-photo { overflow: hidden; }
+.cos-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; user-select: none; }
+.cos-paint { position: absolute; inset: 0; perspective: 900px; pointer-events: none; }
+.cos-shard {
+  position: absolute;
+  background: var(--c);
+  backface-visibility: hidden;
+  /* Reassembling (leaving the gallery): shards return. */
+  transition: transform 1.1s cubic-bezier(0.2, 0.7, 0.3, 1) var(--d), opacity 0.6s ease var(--d);
+}
+/* Arriving in the gallery: each shard falls away from the screen, accelerating like a fall. */
+.cos.in-gallery .cos-shard {
+  transform: translate3d(var(--dx), var(--dy), var(--dz)) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz));
+  opacity: 0;
+  transition: transform 1.5s cubic-bezier(0.55, 0, 0.85, 0.36) var(--d), opacity 1s ease-in calc(var(--d) + 0.45s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cos-shard, .cos.in-gallery .cos-shard { transform: none !important; transition: opacity 0.3s ease; }
+}
+.cos.is-reduced-motion .cos-shard { transform: none !important; transition: opacity 0.3s ease; }
+
+/* Deep places (slides, posts, photos): the title card steps right out of the way. */
+.cos.is-deep.has-title.is-receded .cos-title { opacity: 0; pointer-events: none; }
+
+/* ← → for places in a sequence. */
+.cos-seq { display: flex; gap: 6px; align-items: center; pointer-events: auto; }
+.cos-seq[hidden] { display: none; }
+.cos-seq button {
+  min-height: 40px; min-width: 44px; padding: 0 12px;
+  font: 700 16px/1 var(--ill-text-font, system-ui, sans-serif);
+  background: var(--cos-paper); border: 4px solid var(--cos-ink); cursor: pointer;
+}
+.cos-seq__count { padding: 6px 10px; font-size: 13px; min-width: 4.5em; text-align: center; }
+.cos--analog .cos-seq button { border-radius: 6px; box-shadow: inset 0 1px 0 #fff, 0 4px 0 var(--cos-ink); }
+.cos--analog .cos-seq button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--cos-ink); }
+
+/* The help box shows at the overview only; once you're somewhere it would cover the content. */
+.cos:not(.at-home) .cos-hint { opacity: 0; pointer-events: none; }
+.cos-hint { transition: opacity 0.4s; }
+
+/* The all-places list: present for crawlers and screen readers, not shown. */
+nav.cos-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -1,0 +1,174 @@
+/* ==========================================================================
+   analog.css — bezels, embossing, shadows, film and type with a machine feel
+   --------------------------------------------------------------------------
+   Plain CSS, usable anywhere on the site. Tailwind users: the same pieces are
+   available as utilities in analog.tailwind.css.
+
+   Pieces
+     .an-key       physical key: bevel, travel, latched state (aria-pressed)
+     .an-plaque    screwed-on paper plaque with a lifted shadow (add .an-screw ×4)
+     .an-deboss    text pressed into the surface (letterpress)
+     .an-emboss    text raised from the surface
+     .an-lcd       inset readout window with amber segments-style type
+     .an-film      overlay: viewfinder bezel, vignette, glass, animated grain
+     .an-paper     paper or canvas grain on any surface
+
+   Tokens (override on any ancestor)
+     --an-bezel     bezel thickness              14px   OPTION: 0 (no bezel) | 28px (chunky)
+     --an-radius    viewfinder corner radius     22px   OPTION: 6px (rangefinder) | 48px (CRT)
+     --an-grain     paper grain opacity          0      OPTION: 0.15 (fine print) | 0.35 (coarse)
+     --an-vignette  vignette strength            0.5
+     --an-body      camera-body colour           #0d0d0c
+   ========================================================================== */
+
+:root {
+  --an-bezel: 14px;
+  --an-radius: 22px;
+  --an-grain: 0;
+  --an-vignette: 0.5;
+  --an-body: #0d0d0c;
+  --an-amber: #f5d316;               /* readouts use the palette's yellow */
+  /* Type sets are chosen with [data-type] on a container (see below). */
+  --an-label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --an-mono: 'Courier Prime', 'Courier New', monospace;
+
+  /* Noise textures (SVG fractal noise, no image files). */
+  --an-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.2 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --an-weave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035 .09' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .42 0 0 0 0 .38 0 0 0 .9 -.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Type sets ---------------------------------------------------- */
+/* workshop    geometric 1920s display, engraved condensed labels, typewritten readouts */
+[data-type="workshop"] {
+  --ill-display: 'Jost', 'Futura', 'Century Gothic', sans-serif;
+  --ill-text-font: 'Jost', 'Futura', system-ui, sans-serif;
+  --an-label: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --an-mono: 'Courier Prime', 'Courier New', monospace;
+}
+/* poster      the site's condensed poster type */
+[data-type="poster"] {
+  --ill-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --ill-text-font: 'Instrument Sans', system-ui, sans-serif;
+}
+/* typewriter  everything struck on a ribbon */
+[data-type="typewriter"] {
+  --ill-display: 'Special Elite', 'Courier New', monospace;
+  --ill-text-font: 'Courier Prime', 'Courier New', monospace;
+  --an-label: 'Special Elite', 'Courier New', monospace;
+}
+
+/* ---------- Keys ----------------------------------------------------------- */
+:is(.an-key, .cos--analog :is(.cos-crumbs a, .cos-actions button)) {
+  position: relative;
+  font-family: var(--an-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-variant-caps: all-small-caps;   /* engraved-panel look without shouting */
+  color: var(--ill-ink, #000);
+  background:
+    linear-gradient(#fbfbf8, #dcdcd6 70%, #c9c9c2),
+    var(--ill-paper, #eeeeea);
+  border: 3px solid var(--ill-ink, #000);
+  border-radius: 6px;                 /* OPTION: 0 for flat De Stijl keys */
+  box-shadow:
+    inset 0 1px 0 #fff,                /* top highlight */
+    inset 0 -3px 0 rgba(0, 0, 0, 0.12),/* bottom shade on the cap */
+    0 4px 0 var(--ill-ink, #000),      /* key travel: the skirt */
+    0 7px 10px rgba(0, 0, 0, 0.35);    /* cast shadow */
+  transform: translateY(0);
+  transition: transform 0.06s, box-shadow 0.06s;
+}
+:is(.an-key, .cos--analog :is(.cos-crumbs a, .cos-actions button)):hover { background: linear-gradient(#fff, #e6e6e0 70%, #d2d2cb); }
+:is(.an-key, .cos--analog :is(.cos-crumbs a, .cos-actions button)):active,
+:is(.an-key, .cos--analog :is(.cos-crumbs a, .cos-actions button))[aria-pressed="true"],
+.cos--analog .cos-crumbs a[aria-current] {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 3px rgba(0, 0, 0, 0.25),
+    0 1px 0 var(--ill-ink, #000),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+}
+:is(.an-key, .cos--analog .cos-actions button)[aria-pressed="true"] { background: linear-gradient(#e2172e, var(--ill-red, #d40920)); color: var(--ill-paper, #eeeeea); }
+
+/* ---------- Plaque and screws --------------------------------------------- */
+.an-plaque { position: relative; }   /* the cosmos card keeps its own absolute position */
+:is(.an-plaque, .cos--analog .cos-title) {
+  background: var(--an-weave), linear-gradient(#f4f4f0, var(--ill-paper, #eeeeea));
+  background-size: 240px 240px, auto;
+  background-blend-mode: soft-light;  /* OPTION: multiply for a rougher, older card */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.12),
+    0 12px 0 -4px rgba(0, 0, 0, 0.35),  /* thickness of the board */
+    0 22px 40px rgba(0, 0, 0, 0.45);    /* lifted off the map */
+}
+.an-screw {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background:
+    linear-gradient(var(--screw-angle, 35deg), transparent 44%, rgba(0, 0, 0, 0.75) 45% 55%, transparent 56%),
+    radial-gradient(circle at 35% 30%, #fafafa, #9a9a94 60%, #55554f);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1px 1px rgba(0, 0, 0, 0.4);
+}
+.an-screw:nth-of-type(1) { top: 6px; left: 6px; --screw-angle: 30deg; }
+.an-screw:nth-of-type(2) { top: 6px; right: 6px; --screw-angle: 110deg; }
+.an-screw:nth-of-type(3) { bottom: 6px; left: 6px; --screw-angle: 75deg; }
+.an-screw:nth-of-type(4) { bottom: 6px; right: 6px; --screw-angle: 160deg; }
+
+/* ---------- Pressed and raised type ---------------------------------------- */
+:is(.an-deboss, .cos--analog :is(.cos-title__text, .cos-title__sub)) {
+  color: rgba(0, 0, 0, 0.86);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75), 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+.an-emboss {
+  text-shadow: -1px -1px 0 rgba(255, 255, 255, 0.55), 1px 2px 0 rgba(0, 0, 0, 0.35), 2px 4px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- LCD readout ------------------------------------------------------ */
+:is(.an-lcd, .cos--analog :is(.cos-strip, .cos-hole__readout span)) {
+  font-family: var(--an-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--an-amber);
+  text-shadow: 0 0 6px rgba(245, 211, 22, 0.55);   /* phosphor glow. OPTION: none */
+  background: linear-gradient(#1a1a17, #0b0b0a);
+  border: 2px solid #000;
+  border-radius: 4px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ---------- Paper grain ------------------------------------------------------- */
+.an-paper { background-image: var(--an-weave); background-size: 240px 240px; }
+
+/* ---------- Film overlay: bezel, vignette, glass, grain ------------------------ */
+.an-film {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+/* The bezel is the huge outer shadow of a rounded window. */
+.an-film::before {
+  content: '';
+  position: absolute;
+  inset: var(--an-bezel);
+  border-radius: var(--an-radius);
+  box-shadow:
+    0 0 0 100vmax var(--an-body),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),                  /* bevel catch-light */
+    inset 0 0 calc(80px + 120px * var(--an-vignette)) rgba(0, 0, 0, calc(var(--an-vignette) * 0.85)),
+    inset 0 2px 8px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(125deg, rgba(255, 255, 255, 0.07), transparent 32%); /* glass reflection */
+}
+/* Grain: a still paper-grain texture. It does not animate: moving grain read
+   as a black flicker. OPTION: raise --an-grain for a coarser print. */
+.an-film::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--an-noise);
+  background-size: 180px 180px;
+  opacity: var(--an-grain);
+  mix-blend-mode: soft-light;
+}

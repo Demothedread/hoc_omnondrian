@@ -1,0 +1,56 @@
+---
+/**
+ * WorldPage.astro — one page of the site: the whole world, opened at a place
+ * ---------------------------------------------------------------------------
+ * Every address on the site (/, /projects, /projects/tesla/3, /ideas/welcome,
+ * /gallery/photo-2 …) renders this same page. The browser opens the world at
+ * the place named by the address, and moving around keeps the address in
+ * step, so every place can be shared, bookmarked and indexed.
+ *
+ * Props: route ('' = the overview), title, description
+ */
+import CosmosWorld from './CosmosWorld.astro';
+import IllusionAdmin from '../illusion/IllusionAdmin.astro';
+import { getCosmosConfig, getCosmosModules, getCosmosShots } from '../../lib/cosmos/content';
+import { worldRoutes } from '../../lib/cosmos/world.js';
+
+interface Props { route?: string; title?: string; description?: string }
+const { route = '', title = 'Hoc omnia nihil est', description = '' } = Astro.props;
+
+const config = await getCosmosConfig();
+const modules = await getCosmosModules();
+const shots = await getCosmosShots();
+const places = worldRoutes(modules);
+const base = import.meta.env.BASE_URL;
+const isEditor = import.meta.env.DEV;
+const canonical = Astro.site ? new URL(`${base}${route}`.replace(/\/{2,}/g, '/'), Astro.site).href : undefined;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <link rel="alternate" type="application/rss+xml" title="Writing" href={`${base}rss.xml`} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;800&family=Barlow+Condensed:wght@500;600&family=Courier+Prime:wght@400;700&family=Special+Elite&family=Big+Shoulders+Display:wght@800;900&family=Instrument+Sans:wght@400;500;600&display=swap"
+    />
+  </head>
+  <body class="m-0 overflow-hidden bg-stijl-ink" data-type="workshop">
+    <CosmosWorld id="world" config={config} modules={modules} shots={shots} subline="Studio of Jonathan Mark Reback" persist={isEditor} base={base} />
+    <!-- Every place as a plain link: for search engines, screen readers and visitors without JavaScript. -->
+    <nav class="cos-sr" aria-label="All places on the site">
+      <ul>
+        {places.map((p) => <li><a href={`${base}${p.route}`}>{p.title}</a></li>)}
+      </ul>
+    </nav>
+    {isEditor && <IllusionAdmin target="world" title="Controls" />}
+  </body>
+</html>
