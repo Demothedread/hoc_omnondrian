@@ -1,4 +1,8 @@
 ---
+// DESCRIPTION: Mounts a schema-driven live control dock and links to the portfolio authoring tools.
+// INPUTS: Target stage ID, initial open state and panel title.
+// OUTPUTS: Accessible controls with local content-editor entry points.
+// DEPENDENCIES: Illusion registry and the reusable admin renderer.
 /**
  * IllusionAdmin.astro
  * ---------------------------------------------------------------------------
@@ -31,7 +35,7 @@ interface Props {
 const { target, open = true, title = 'Controls' } = Astro.props;
 ---
 
-<div class="ill-admin-dock" data-ill-admin-dock data-target={target} data-title={title} data-open={open ? 'true' : 'false'}>
+<div class="ill-admin-dock" data-ill-admin-dock data-target={target} data-title={title} data-base={import.meta.env.BASE_URL} data-open={open ? 'true' : 'false'}>
   <button type="button" class="ill-admin-dock__open" aria-controls={`${target}-admin`} aria-expanded={open ? 'true' : 'false'}>
     Controls
   </button>
@@ -92,6 +96,14 @@ const { target, open = true, title = 'Controls' } = Astro.props;
     };
 
     mountAdmin(panel, entry.store, { onClose: () => setOpen(false), title: dock.dataset.title });
+    if (stageEl?.hasAttribute('data-cosmos')) {
+      const tools = document.createElement('nav');
+      tools.className = 'ill-admin__tools';
+      tools.setAttribute('aria-label', 'Content tools');
+      const base = dock.dataset.base || '/';
+      tools.innerHTML = `<a href="${base}studio">Project Studio ↗</a><a href="${base}keystatic">Content CMS ↗</a>`;
+      panel.querySelector('footer')?.append(tools);
+    }
     bindAdminShortcut(() => setOpen(dock.dataset.open !== 'true'));
     openBtn.addEventListener('click', () => setOpen(true));
     if (matchMedia('(max-width: 760px)').matches) {

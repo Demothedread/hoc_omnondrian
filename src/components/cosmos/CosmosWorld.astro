@@ -54,7 +54,7 @@ const html = cosmosMarkup(worldModel(cfg.seed, modules), cfg, subline, { base })
 // the admin panel can rebuild the world when the seed changes.
 const forClient = import.meta.env.DEV
   ? modules
-  : modules.map((m) => ({ id: m.id, title: m.title, summary: m.summary, items: m.items.map((i) => ({ id: i.id, title: i.title })) }));
+  : modules.map((m) => ({ id: m.id, title: m.title, summary: m.summary, greeting: m.greeting, avatar: m.avatar, items: m.items.map((i) => ({ id: i.id, title: i.title, stations: i.stations })) }));
 ---
 
 <main

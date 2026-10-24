@@ -1,0 +1,34 @@
+---
+// DESCRIPTION: Presents local document intake and editorial project arrangement tools.
+// INPUTS: User-selected Markdown/DOCX files or pasted project source.
+// OUTPUTS: Native-layout previews, reorder controls and explicit local draft/export actions.
+// DEPENDENCIES: StijlPage and studio client modules.
+import StijlPage from '../layouts/StijlPage.astro';
+import '../styles/studio.css';
+---
+<StijlPage title="Project Studio — Hoc omnia nihil est">
+  <main class="studio" data-studio>
+    <header class="studio-head"><p>HOC OMNIA · AUTHOR STUDIO</p><h1>From document<br />to a place in the park.</h1><p>Bring the work. Shape the story. The site composes the geometry.</p></header>
+    <section class="studio-intake" aria-label="Import a project">
+      <label class="studio-drop" data-drop>Choose a document <span>Markdown, Markdoc, Word (.docx), or text · up to 12 MB</span><input data-file type="file" accept=".md,.markdown,.mdoc,.docx,.txt" /></label>
+      <details><summary>Or paste a labeled document</summary><label class="studio-source-label">Project source<textarea data-source rows="9" placeholder="# Project title&#10;&#10;An introduction.&#10;&#10;## Context&#10;&#10;Your section text."></textarea></label><button type="button" data-generate>Compose from text</button></details>
+    </section>
+    <p class="studio-status" data-status role="status" aria-live="polite">Headings become sections. Figures, images and quotations keep their place.</p>
+    <p class="studio-error" data-error role="alert" hidden></p>
+    <section class="studio-workspace" data-workspace hidden>
+      <aside class="studio-controls">
+        <h2>Shape the project</h2>
+        <label>Project title<input data-title maxlength="200" /></label>
+        <label>URL name<input data-slug pattern="[a-z0-9-]+" maxlength="60" /></label>
+        <label>Opens as<select data-format><option value="deck">Magazine spreads</option><option value="report">Continuous report</option></select></label>
+        <label>Words per spread<select data-words><option value="100">100 · more breathing room</option><option value="150" selected>150 · balanced</option><option value="240">240 · longer reading</option></select></label>
+        <p class="studio-help">The title and introduction open the project. Drag the sections below, or use ↑ ↓ to change their order. The original section text is preserved.</p>
+        <ol class="studio-parts" data-parts aria-label="Project section order"></ol>
+        <div class="studio-actions"><button type="button" data-save disabled>Save local draft</button><button type="button" data-export>Download .mdoc</button><button type="button" data-new>Start a new project</button></div>
+        <p class="studio-help" data-save-help>Checking local draft saving…</p>
+      </aside>
+      <div class="studio-preview" data-preview aria-label="Site-native preview"></div>
+    </section>
+  </main>
+</StijlPage>
+<script>import '../lib/studio/client.js';</script>

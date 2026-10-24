@@ -1,3 +1,7 @@
+// DESCRIPTION: Controls camera travel, zoom and unbounded panning over the portfolio plane.
+// INPUTS: Viewport, plane, world dimensions, configuration and reduced-motion preference.
+// OUTPUTS: Camera state, coordinate conversion and cancellable movement controls.
+// DEPENDENCIES: van Wijk zoom paths and critically damped springs.
 /**
  * cosmos/camera.js — a camera over a plane much larger than the screen
  * ---------------------------------------------------------------------------
@@ -80,8 +84,7 @@ export function createCamera(viewport, plane, { world, getConfig, isReduced }) {
   }
 
   function clampCentre() {
-    cam.x = Math.min(world.w, Math.max(0, cam.x));
-    cam.y = Math.min(world.h, Math.max(0, cam.y));
+    // The repeating ground has no spatial edge; only zoom depth is constrained.
     cam.w = Math.min(maxW(), Math.max(MIN_W, cam.w));
   }
 
@@ -222,6 +225,7 @@ export function createCamera(viewport, plane, { world, getConfig, isReduced }) {
     velocity: vel,
     overview,
     fit,
+    toWorld,
     flyTo,
     driftTo,
     tick,

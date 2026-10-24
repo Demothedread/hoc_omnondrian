@@ -1,7 +1,12 @@
+// DESCRIPTION: Maps site content to pluggable Cosmos modules and fallback camera shots.
+// INPUTS: Projects, photos, posts, About and résumé content.
+// OUTPUTS: Module items with nested projects and addressable journey stations.
+// DEPENDENCIES: Site renderers, sample data and the pure journey adapter.
 import { SAMPLE_PROJECTS, SAMPLE_PHOTOS, SAMPLE_POSTS } from '../site/sample.js';
 import { renderReport } from '../stijl/presentation.js';
 import { bodyHTML } from '../stijl/blog.js';
 import { escapeHtml } from '../illusion/config.js';
+import { journeySections } from './journey.js';
 
 const kebab = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -24,12 +29,11 @@ export function buildModules({ projects, photos, posts, about, resume }) {
     { id: 'ideas', title: 'Ideas', summary: 'Writing. Fly to a post to read it.',
       items: posts.map((p) => ({ id: p.slug, title: p.title, body: p.summary, kind: 'read',
         html: `<header class="cos-read__head"><p class="stijl__kicker">${escapeHtml(p.date ?? '')}</p><h1>${escapeHtml(p.title)}</h1></header>${p.html ?? ''}` })) },
-    { id: 'about', title: 'About', summary: about.summary ?? '',
+    { id: 'about', title: 'About', summary: about.summary ?? '', greeting: about.greeting, avatar: about.avatar,
       items: [{ id: 'studio', title: about.title ?? 'About', body: about.summary ?? '', kind: 'read', html: `<h1>${escapeHtml(about.title ?? 'About')}</h1>${about.html ?? ''}` }] },
     { id: 'resume', title: 'Resumé', summary: resume.summary ?? 'Experience, education, skills.',
-      items: resume.sections.map((sec) => ({ id: kebab(sec.heading) || 'section', title: sec.heading, kind: 'cards',
-        cards: sec.entries.map((e) => ({ kicker: e.dates, title: e.title, summary: [e.org, e.note].filter(Boolean).join(' — ') })) })) },
-    { id: 'api', title: '{API}', summary: 'Every collection as JSON.',
+      items: journeySections(resume) },
+    { id: 'api', title: 'Site links', summary: 'Connections and open collections.',
       items: [{ id: 'endpoints', title: 'Endpoints', body: 'JSON for every collection.', kind: 'cards', cards: [
         { kicker: 'GET', title: '/api/projects.json', summary: 'Projects with their slides', href: '/api/projects.json' },
         { kicker: 'GET', title: '/api/posts.json', summary: 'Posts', href: '/api/posts.json' },

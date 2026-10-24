@@ -1,5 +1,5 @@
 {
-  "summary": "[Placeholder] A sentence that frames the resumé.",
+  "summary": "Professional paths, personal detours, and the work along the way.",
   "sections": [
     {
       "heading": "Experience",
@@ -8,15 +8,34 @@
           "title": "[Placeholder] Role",
           "org": "Organisation",
           "dates": "Years",
-          "note": "What you did there."
+          "note": "What you did there.",
+          "id": "placeholder-role-1"
         },
         {
           "title": "[Placeholder] Role",
           "org": "Organisation",
           "dates": "Years",
-          "note": ""
+          "note": "",
+          "id": "placeholder-role-2"
         }
-      ]
+      ],
+      "id": "experience"
+    },
+    {
+      "heading": "Personal detours",
+      "entries": [
+        {
+          "title": "Off the page",
+          "org": "Photographs & writing",
+          "dates": "A detour",
+          "note": "Explore the photographs and writing that sit alongside the projects in this park.",
+          "type": "personal",
+          "commentary": "Let\u2019s step off the r\u00e9sum\u00e9 for a moment. The gallery is another way into the park; you can always return to the next station.",
+          "destination": "gallery",
+          "id": "off-the-page-1"
+        }
+      ],
+      "id": "personal-detours"
     },
     {
       "heading": "Education",
@@ -25,9 +44,11 @@
           "title": "[Placeholder] Degree",
           "org": "School",
           "dates": "Year",
-          "note": ""
+          "note": "",
+          "id": "placeholder-degree-1"
         }
-      ]
+      ],
+      "id": "education"
     },
     {
       "heading": "Skills",
@@ -36,15 +57,18 @@
           "title": "[Placeholder] Skill",
           "org": "",
           "dates": "",
-          "note": ""
+          "note": "",
+          "id": "placeholder-skill-1"
         },
         {
           "title": "[Placeholder] Skill",
           "org": "",
           "dates": "",
-          "note": ""
+          "note": "",
+          "id": "placeholder-skill-2"
         }
-      ]
+      ],
+      "id": "skills"
     }
   ]
 }

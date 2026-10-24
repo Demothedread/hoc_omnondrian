@@ -9,7 +9,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "import": "node scripts/import-project.mjs",
-    "test": "node test/compose.test.mjs && node test/doc-to-deck.test.mjs && node test/import.test.mjs && node test/world.test.mjs",
+    "test": "node test/compose.test.mjs && node test/doc-to-deck.test.mjs && node test/import.test.mjs && node test/world.test.mjs && node test/park.test.mjs && node test/continuum.test.mjs",
     "demo": "python3 demo/build.py"
   },
   "dependencies": {
@@ -22,6 +22,7 @@
     "@spotlightjs/astro": "^3.2.6",
     "@tailwindcss/vite": "^4.0.0",
     "astro": "^7.4.0",
+    "mammoth": "^1.8.0",
     "motion": "^12.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -29,8 +30,7 @@
     "three": "^0.178.0"
   },
   "optionalDependencies": {
-    "@astrojs/vercel": "^11.0.15",
-    "mammoth": "^1.8.0"
+    "@astrojs/vercel": "^11.0.15"
   },
   "engines": {
     "node": ">=18.20.8"

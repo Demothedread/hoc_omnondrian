@@ -1,3 +1,7 @@
+// DESCRIPTION: Declares the no-code portfolio collections and editable journey/host fields.
+// INPUTS: Local content files or configured GitHub repository storage.
+// OUTPUTS: Keystatic forms for projects, pages, stations and motion settings.
+// DEPENDENCIES: Keystatic core and local illusion/shot schemas.
 /**
  * keystatic.config.ts — the no-code CMS
  * ---------------------------------------------------------------------------
@@ -44,6 +48,7 @@ const projects = collection({
   schema: {
     title: fields.slug({ name: { label: 'Title' } }),
     kind: fields.text({ label: 'Kind', description: 'Shown above the title, e.g. Presentation or Report.', defaultValue: 'Presentation' }),
+    draft: fields.checkbox({ label: 'Draft (hidden from the park)', defaultValue: false }),
     format: fields.select({ label: 'Opens as', options: [{ label: 'Presentation (slides)', value: 'deck' }, { label: 'Report (long form)', value: 'report' }], defaultValue: 'deck' }),
     summary: fields.text({ label: 'One-line summary', description: 'Leave empty to use the first paragraph.', multiline: true }),
     source: fields.select({
@@ -117,6 +122,8 @@ const about = singleton({
   schema: {
     title: fields.text({ label: 'Title', defaultValue: 'About' }),
     summary: fields.text({ label: 'Summary', multiline: true }),
+    greeting: fields.text({ label: 'Guide greeting', description: 'The illustrated host greets visitors with this message.', multiline: true }),
+    avatar: fields.image({ label: 'Guide illustration (optional replacement)', directory: 'public/images/host', publicPath: '/images/host/' }),
     content: fields.markdoc({ label: 'Body' }),
   },
 });
@@ -130,12 +137,17 @@ const resume = singleton({
     sections: fields.array(
       fields.object({
         heading: fields.text({ label: 'Section', description: 'e.g. Experience, Education, Skills' }),
+        id: fields.text({ label: 'Permanent section URL', description: 'Keep this unique and unchanged when renaming or reordering sections.' }),
         entries: fields.array(
           fields.object({
             title: fields.text({ label: 'Title' }),
+            id: fields.text({ label: 'Permanent station URL', description: 'Use a unique short name within this section. Keep it unchanged when editing or reordering.' }),
             org: fields.text({ label: 'Organisation' }),
             dates: fields.text({ label: 'Dates' }),
             note: fields.text({ label: 'Note', multiline: true }),
+            type: fields.select({ label: 'Station type', defaultValue: 'professional', options: [{ label: 'Professional', value: 'professional' }, { label: 'Personal', value: 'personal' }] }),
+            commentary: fields.text({ label: 'Guide commentary', description: 'A short aside spoken by the illustrated host at this station.', multiline: true }),
+            destination: fields.text({ label: 'Related destination', description: 'Optional park path, e.g. gallery or projects/tesla. No leading slash needed.' }),
           }),
           { label: 'Entries', itemLabel: (p) => p.fields.title.value || 'Entry' },
         ),

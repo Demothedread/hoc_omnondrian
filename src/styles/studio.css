@@ -1,0 +1,39 @@
+/* DESCRIPTION: Styles the document intake, editable section order and native project previews.
+   INPUTS: Studio workspace markup and active import state.
+   OUTPUTS: Responsive authoring layout with large usable controls.
+   DEPENDENCIES: Shared editorial spread styles and theme tokens. */
+.studio { max-width: 1560px; margin: auto; padding: clamp(20px,5vw,72px); color: #171715; }
+.studio [hidden] { display: none !important; }
+.studio-head { border-bottom: 8px solid #171715; padding-bottom: 30px; max-width: 1000px; }
+.studio-head > p:first-child { font: 12px var(--an-mono,monospace); letter-spacing: .15em; }
+.studio-head h1 { font: 800 clamp(40px,6vw,82px)/.96 var(--ill-display,sans-serif); letter-spacing: -.045em; margin: 20px 0; }
+.studio-head p { margin-top: 20px; }
+.studio-intake { margin: 32px 0 18px; max-width: 1000px; }
+.studio-drop { display: block; padding: 32px; border: 3px dashed #171715; background: #f6d827; cursor: pointer; font-weight: 800; font-size: 22px; }
+.studio-drop span { display: block; font-size: 13px; font-weight: 400; margin: 8px 0 18px; }
+.studio-drop input { font-size: 14px; width: 100%; }
+.studio-drop.is-over { background: #d7e6fc; border-style: solid; }
+.studio-intake details { padding: 18px 0; }
+.studio-intake summary { cursor: pointer; font-weight: 700; }
+.studio-source-label { display: block; margin-block: 15px; }
+.studio textarea { display: block; width: 100%; min-height: 180px; margin-top: 8px; padding: 14px; border: 2px solid #171715; font: 13px/1.5 monospace; }
+.studio-status { max-width: 90ch; padding: 12px 0; font-size: 14px; }
+.studio-error { border-left: 5px solid #d40920; background: #fff5ed; padding: 15px; max-width: 90ch; }
+.studio-workspace { display: grid; grid-template-columns: 320px minmax(0,1fr); gap: clamp(24px,4vw,64px); margin-top: 25px; align-items: start; }
+.studio-controls { position: sticky; top: 94px; max-height: calc(100dvh - 110px); overflow-y: auto; padding-right: 8px; scrollbar-width: thin; }
+.studio-controls h2 { font-size: 25px; font-weight: 800; margin: 0 0 20px; }
+.studio-controls > label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 13px; }
+.studio-controls :is(input,select) { display: block; width: 100%; background: #fffef8; padding: 11px; border: 2px solid #171715; font: 14px var(--ill-text-font,sans-serif); margin-top: 5px; min-height: 44px; }
+.studio-help { font-size: 12px; line-height: 1.6; margin: 18px 0; }
+.studio-parts { list-style: none; padding: 0; margin: 0; }
+.studio-parts li { display: flex; gap: 7px; align-items: center; border: 2px solid #171715; background: #fffef8; padding: 8px; margin-bottom: 7px; cursor: grab; font-size: 12px; }
+.studio-parts li > span:nth-child(2) { flex: 1; }
+.studio-grip { font-size: 20px; }
+.studio button { background: #171715; color: #fffef8; border: 2px solid #171715; padding: 10px 14px; min-height: 44px; cursor: pointer; font-size: 13px; font-weight: 700; }
+.studio button:disabled { opacity: .35; cursor: default; }
+.studio-parts button { min-width: 32px; min-height: 38px; padding: 5px; background: transparent; color: #171715; }
+.studio-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.studio-actions button:first-child { background: #1356a2; }
+.studio-spread { height: auto; aspect-ratio: 1.4; margin-bottom: 28px; border: 5px solid #171715; box-shadow: 6px 8px 0 #17171520; }
+.studio-preview { min-width: 0; }
+@media(max-width: 900px) { .studio-workspace { grid-template-columns: 1fr; } .studio-controls { position: static; max-height: none; } .studio-spread { aspect-ratio: .85; } }

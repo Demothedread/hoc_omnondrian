@@ -1,3 +1,7 @@
+// DESCRIPTION: Coordinates Cosmos camera, routing, world effects and destination lifecycles.
+// INPUTS: World DOM, validated store, content modules, shots and base URL.
+// OUTPUTS: Navigable portfolio runtime and explicit teardown controls.
+// DEPENDENCIES: Cosmos camera/effects, isolated park modules, Motion and gallery viewer.
 /**
  * cosmos/cosmos.js — the world, the camera and everything that moves them
  * ---------------------------------------------------------------------------
@@ -42,6 +46,9 @@ import { timeDilation } from './math/schwarzschild.js';
 import { REGISTRY } from '../illusion/registry.js';
 import { escapeHtml } from '../illusion/config.js';
 import { mountLightbox } from '../stijl/gallery.js';
+import { createDestinationPlates } from './plates.js';
+import { parkMarkup, mountParkUI } from './park-ui.js';
+import { boardTile, mountContinuum, repeatedDestination } from './continuum.js';
 
 const PUSH_THRESHOLD = 900;  // wheel delta at the main page before the cinematic fall
 const HOME_THRESHOLD = 260;  // wheel delta inside the map before being sucked home
@@ -53,13 +60,14 @@ export function cosmosMarkup(model, cfg, subline = '', { base = '/' } = {}) {
   return `
   <div class="cos-layer cos-layer--far" data-layer="far" aria-hidden="true"><div class="cos-sky"></div></div>
   <div class="cos-layer cos-layer--map" data-layer="map">
-    <div class="cos-plane" style="width:${WORLD.w}px;height:${WORLD.h}px">${renderWorldHTML(model, { base })}</div>
+    <div class="cos-stage"><div class="cos-continuum" aria-hidden="true"></div><div class="cos-plane" style="width:${WORLD.w}px;height:${WORLD.h}px">${renderWorldHTML(model, { base })}</div><div class="cos-map-placeholder" aria-hidden="true">${boardTile(model, WORLD)}</div></div>
   </div>
   <div class="cos-layer cos-layer--near" data-layer="near">
     <div class="cos-title">
       <span class="an-screw"></span><span class="an-screw"></span><span class="an-screw"></span><span class="an-screw"></span>
       <p class="cos-title__text" data-cos-title data-text="${escapeHtml(cfg.titleText)}" aria-hidden="true">${escapeHtml(cfg.titleText)}</p>
       <p class="cos-title__sub" data-cos-sub aria-hidden="true">${escapeHtml(subline)}</p>
+      <span class="park-plate__sheen" aria-hidden="true"></span>
     </div>
   </div>
   <div class="cos-hole" aria-hidden="true"><canvas></canvas><p class="cos-hole__readout" data-cos-readout></p></div>
@@ -79,6 +87,7 @@ export function cosmosMarkup(model, cfg, subline = '', { base = '/' } = {}) {
       <button type="button" data-act="dive">Fall into the black hole</button>
     </div>
   </nav>
+  ${parkMarkup(model.regions.filter((r) => r.module).map((r) => r.module), base)}
   <p class="cos-hint">Click a field to travel there; click again to open it. ← → move through slides, photos and posts. Esc goes up a level. Scroll up or pinch to go home through the singularity.</p>
   <dialog class="lightbox" aria-label="Photo">
     <form method="dialog"><button class="lightbox__close an-key">Close</button></form>
@@ -131,6 +140,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
   const seqCount = $('[data-cos-count]');
 
   const camera = createCamera(root, plane, { world: WORLD, getConfig: cfg, isReduced: reduced });
+  const continuum = mountContinuum($('.cos-continuum'), model, WORLD);
   const rack = createRackFocus(
     root,
     Object.entries(LAYER_MM).map(([name, distance]) => ({ name, el: layers[name], distance })),
@@ -197,28 +207,17 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
   }
 
   let rackTimer = 0;
+  const plates = createDestinationPlates(root, { rack, setTitle, isReduced: reduced, focusDuration: () => cfg().focusPull, shouldRack: () => cfg().rackOnArrival });
+  const park = mountParkUI(root, modules, { base, navigate, isReduced: reduced });
   /** Arrival moment: new title, focus racks to it, then back to the map. */
   function announce(title, sub, route, { stay = false } = {}) {
     // Visible world width, so content in a filled field sizes itself to the screen.
     plane.style.setProperty('--cos-view-w', camera.state.w.toFixed(0));
-    setTitle(title, sub);
     setCrumbs(route);
     clearTimeout(rackTimer);
-    root.classList.add('has-title');
     sound.thock();
-    const recede = () => root.classList.toggle('is-receded', !!route);
-    root.classList.remove('is-receded');
-    // Deep places (a slide, a post, a photo) are the content itself: no card, and the
-    // focus stays on the map so the content arrives sharp.
-    if (route.split('/').length >= 2 && !stay) {
-      root.classList.add('is-deep', 'is-receded');
-      rack.focusOn('map');
-      return;
-    }
-    if (stay) { rack.focusOn('near'); return; }
-    if (!cfg().rackOnArrival) { rack.focusOn('map'); recede(); return; }
-    rack.focusOn('near');
-    rackTimer = setTimeout(() => { rack.focusOn('map'); recede(); }, 900 + cfg().focusPull * 1000);
+    const token = plates.begin(title, sub, route);
+    plates.finish(token);
   }
 
   function setCrumbs(route) {
@@ -273,7 +272,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     if (!route || route === 'overview') {
       return { view: camera.overview(), focusPoint: null, title: cfg().titleText, sub: subline, route: '' };
     }
-    const el = placeEl(route);
+    const el = placeEl(route === 'about' ? 'about/studio' : route);
     if (!el) return null;
     const isContent = el.matches('.cos-cell--content');
     // Photos fill the screen; reading fields, slides, projects and cards are framed whole
@@ -283,8 +282,15 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     const mode = fit ?? (fills ? cfg().arrivalFit : 'frame');
     const target = isContent ? (mode === 'fill' ? cellRect(el) : rectOf(el)) : rectOf(el);
     const focus = isContent ? cellRect(el) : rectOf(el);
+    let view = camera.fit(target, isItem ? 0.1 : 0.06, mode);
+    if (el.matches('.cos-slide')) {
+      const vw = root.clientWidth, vh = root.clientHeight;
+      const top = vw < 760 ? 165 : 130, bottom = 38;
+      const scale = Math.min((vw - 40) / target.w, Math.max(120, vh - top - bottom) / target.h);
+      view = [target.x + target.w / 2, target.y + target.h / 2 - (top - bottom) / (2 * scale), vw / scale];
+    }
     return {
-      view: camera.fit(target, el.matches('.cos-slide') ? 0.04 : isItem ? 0.1 : 0.06, mode),
+      view,
       focusPoint: [focus.x + focus.w / 2, focus.y + focus.h / 2],
       title: el.querySelector('h2, h3, .cos-singularity__label')?.textContent ?? route,
       sub: el.querySelector('p')?.textContent ?? '',
@@ -304,8 +310,21 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     const d = destination(route);
     if (!d) return;
     leave();
+    setCrumbs(d.route);
+    const flightViewport = [root.clientWidth, root.clientHeight];
+    const token = plates.begin(d.title, d.sub, d.route);
     const arrived = await camera.flyTo(d.view, { immediate });
-    if (arrived) { announce(d.title, d.sub, d.route); arrive(d.route); }
+    if (!arrived) { plates.cancel(token); return; }
+    if (arrived && await plates.finish(token)) {
+      // A rotation during the flight has no current reading node for the resize observer to refit.
+      if (flightViewport[0] !== root.clientWidth || flightViewport[1] !== root.clientHeight) {
+        const resized = destination(route);
+        if (resized) await camera.flyTo(resized.view, { immediate: true });
+      }
+      plane.style.setProperty('--cos-view-w', camera.state.w.toFixed(0));
+      sound.thock();
+      arrive(d.route);
+    }
   }
 
   // --- arriving at a place -------------------------------------------------------
@@ -323,9 +342,15 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     root.classList.toggle('in-gallery', route === 'gallery' || route.startsWith('gallery/'));
     root.classList.toggle('at-home', route === '');
     root.classList.toggle('is-deep', route.split('/').length >= 2);
-    const el = route ? placeEl(route) : null;
+    root.dataset.destination = route.split('/')[0] || 'overview';
+    const el = route ? placeEl(route === 'about' ? 'about/studio' : route) : null;
     if (el) {
       el.classList.add('is-current');
+      el.style.setProperty('--read-s', (root.clientWidth / camera.state.w).toFixed(5));
+      // A direct link can skip the outer composition's reveal trigger.
+      for (let parent = el.parentElement; parent && parent !== plane; parent = parent.parentElement) {
+        if (parent.matches('.stijl[data-assemble]')) parent.classList.add('is-in');
+      }
       el.querySelectorAll('.stijl[data-assemble]').forEach((sec) => sec.classList.add('is-in'));
       if (el.hasAttribute('data-read')) {
         el.style.setProperty('--read-s', (root.clientWidth / camera.state.w).toFixed(5)); // type stays ~19px on screen
@@ -334,6 +359,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
       }
     }
     updateSeq(el);
+    park.update(route);
   }
   /** Places that come in order (slides, photos, posts): their siblings and position. */
   function sequenceOf(el) {
@@ -492,6 +518,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     director.stop();
     camera.cancel();
     clearTimeout(rackTimer);
+    plates.cancel();
     const c = cfg();
     const h = ensureHole();
     if (!h || reduced()) { busy = false; return warpHome(); }
@@ -534,6 +561,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     director.stop();
     camera.cancel();
     clearTimeout(rackTimer);
+    plates.cancel();
     pressure = 0;
     const c = cfg();
     const landHome = () => {
@@ -608,7 +636,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     if (director.playing()) { director.stop(); camera.stop(); }
   }
 
-  const isChrome = (el) => el.closest('.cos-hud, .ill-admin, .cos-title');
+  const isChrome = (el) => el.closest('.cos-hud, .ill-admin, .cos-title, .park-ui, dialog');
 
   /** At the main page: keep pushing back and take the cinematic fall. */
   function pushAtEdge(amount) {
@@ -630,14 +658,14 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
   }
 
   root.addEventListener('wheel', (e) => {
-    if (e.target.closest('.ill-admin')) return; // the wheel zooms the map anywhere else, title card and HUD included
+    if (e.target.closest('.ill-admin, .park-ui, dialog')) return;
     e.preventDefault();
     if (busy) { skipLinger = true; return; }
     interrupt();
     const r = root.getBoundingClientRect();
     const dy = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaY;
     // Reading: the wheel scrolls the text (at screen speed) until it runs out.
-    const reader = e.target.closest('.is-reading .cos-read');
+    const reader = e.target.closest('.is-reading .cos-read, .is-current [data-park-scroll]');
     if (reader) {
       const canDown = reader.scrollTop + reader.clientHeight < reader.scrollHeight - 1;
       const canUp = reader.scrollTop > 0;
@@ -653,7 +681,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
   root.addEventListener('pointerdown', (e) => {
     if (isChrome(e.target) || busy) { if (busy) skipLinger = true; return; }
     interrupt();
-    readerDrag = e.target.closest('.is-reading .cos-read');
+    readerDrag = e.target.closest('.is-reading .cos-read, .is-current [data-park-scroll]');
     pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     dragMoved = false;
     lastMove = performance.now();
@@ -739,7 +767,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
       step(1);
       return;
     }
-    if (e.target.closest('.is-reading .cos-read')) return; // reading: let people select text
+    if (e.target.closest('.is-reading .cos-read, .is-current [data-park-scroll]')) return;
     const shotEl = e.target.closest('[data-shot]');
     if (shotEl && play(shotEl.dataset.shot)) return;
     // One level deeper than where you are: the outermost field under the click that is smaller
@@ -752,7 +780,13 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     }
     const camW = camera.state.w;
     const pick = [...chain].reverse().find((el) => rectOf(el).w < camW * 0.7) ?? chain[0];
-    if (!pick) return;
+    if (!pick) {
+      const bounds = root.getBoundingClientRect();
+      const [x, y] = camera.toWorld(e.clientX - bounds.left, e.clientY - bounds.top);
+      const repeated = repeatedDestination(model, x, y, WORLD);
+      if (repeated) navigate(repeated);
+      return;
+    }
     const route = pick.dataset.route ?? pick.dataset.routeRegion;
     if (route) {
       const bound = shotList.find((sh) => sh.trigger.on === 'click' && sh.trigger.route === route);
@@ -795,7 +829,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
       step(k === 'ArrowRight' ? 1 : -1);
       return;
     }
-    else if (e.target.closest('.is-reading .cos-read') && /^(Arrow(Up|Down)|PageUp|PageDown|Home|End| )$/.test(k)) return; // the reader scrolls
+    else if (e.target.closest('.is-reading .cos-read, .is-current [data-park-scroll]') && /^(Arrow(Up|Down)|PageUp|PageDown|Home|End| )$/.test(k)) return;
     else if (k === '+' || k === '=') camera.wheel(root.clientWidth / 2, root.clientHeight / 2, -300);
     else if (k === '-' || k === '_') back(HOME_THRESHOLD, () => camera.wheel(root.clientWidth / 2, root.clientHeight / 2, 300));
     else if (k.startsWith('Arrow') && !e.target.closest('input, select, textarea')) {
@@ -816,7 +850,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
   });
 
   // HUD buttons; hovering the title card pulls focus to it.
-  root.querySelector('.cos-actions').addEventListener('click', (e) => {
+  root.querySelector('.cos-hud').addEventListener('click', (e) => {
     const act = e.target.closest('[data-act]')?.dataset.act;
     if (act === 'sound') { toggleSound(); return; }
     if (act) (act === 'tour' ? sound.latch : sound.key)();
@@ -835,15 +869,13 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     sound.key();
     navigate(a.dataset.route);
   });
-  const card = root.querySelector('.cos-title');
-  card.addEventListener('pointerenter', () => { clearTimeout(rackTimer); rack.focusOn('near'); });
-  card.addEventListener('pointerleave', () => rack.focusOn('map'));
 
   // --- config changes -----------------------------------------------------
   const unsubscribe = store.subscribe((next, prev) => {
     if (next.seed !== prev.seed && modules.every((m) => m.items.every((i) => i.kind))) {  // the live site ships a light copy; rebuilding needs full content (dev)
       model = worldModel(next.seed, modules);
       plane.innerHTML = renderWorldHTML(model, { base });
+      continuum.updateModel(model);
       prepareNested();
       root.dataset.seed = next.seed;
       skyDirty = true;
@@ -882,6 +914,7 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
     // Sky parallax: far things move less (1/distance); a slight scale with zoom
     // is what makes the Pinna rings appear to turn.
     const s = camera.state;
+    continuum.update(s, { w: root.clientWidth, h: root.clientHeight });
     const zoomX = camera.overview()[2] / s.w;
     sky.style.transform = `translate(${(-s.x * 0.012).toFixed(1)}px, ${(-s.y * 0.012).toFixed(1)}px) scale(${Math.pow(zoomX, 0.12).toFixed(4)})`;
 
@@ -919,7 +952,15 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
   }
   const onVisibility = () => { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else if (!raf) { last = 0; raf = requestAnimationFrame(frame); } };
   document.addEventListener('visibilitychange', onVisibility);
-  const ro = new ResizeObserver(() => { camera.resize(); skyDirty = true; warp?.resize(); });
+  const ro = new ResizeObserver(() => {
+    camera.resize(); skyDirty = true; warp?.resize();
+    root.classList.toggle('is-narrow', root.clientWidth < 760);
+    const route = routeFromHash(), current = plane.querySelector('.is-current');
+    if (route && current && !busy && !camera.isBusy()) {
+      const d = destination(route);
+      if (d) { camera.flyTo(d.view, { immediate: true }); current.style.setProperty('--read-s', (root.clientWidth / camera.state.w).toFixed(5)); }
+    }
+  });
   ro.observe(root);
 
   // --- nested compositions and the photo viewer --------------------------------
@@ -972,6 +1013,8 @@ export function createCosmos(root, store, { modules, shots = [], subline = '', b
       unsubscribe();
       ro.disconnect();
       director.stop();
+      plates.destroy();
+      park.destroy();
       titleFx?.destroy();
       hole?.destroy();
       warp?.destroy();

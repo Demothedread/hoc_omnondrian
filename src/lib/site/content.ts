@@ -1,3 +1,7 @@
+// DESCRIPTION: Reads public portfolio content and excludes unpublished project drafts.
+// INPUTS: Keystatic collections, Markdoc sources and authored journey/host metadata.
+// OUTPUTS: Normalized project, photo, post, About and résumé records.
+// DEPENDENCIES: Keystatic reader, Markdoc and document-to-project mapping.
 /**
  * site/content.ts — reads the CMS (Keystatic) for every page
  * ---------------------------------------------------------------------------
@@ -30,6 +34,7 @@ export async function getProjects() {
     const all = await reader().collections.projects.all();
     if (!all.length) return SAMPLE_PROJECTS;
     return all
+      .filter(({ entry }) => !entry.draft)
       .map(({ slug, entry }) => {
         const handBuilt = entry.slides.map((s) => ({ blocks: s.blocks.map((b) => ({ type: b.discriminant, ...b.value })) }));
         const doc = entry.source === 'document' ? documentToProject(rawBody(slug), { title: entry.title, maxWords: entry.maxWords ?? 150 }) : null;
@@ -84,7 +89,7 @@ export async function getPostHTML(post: any) {
 export async function getAbout() {
   try {
     const a = await reader().singletons.about.read();
-    if (a) return { title: a.title, summary: a.summary, html: await markdocHTML(a.content) };
+    if (a) return { title: a.title, summary: a.summary, greeting: a.greeting, avatar: a.avatar, html: await markdocHTML(a.content) };
   } catch {}
   return { title: 'About', summary: 'Write the About page in the CMS.', html: '<p>Write the About page in the CMS (About).</p>' };
 }

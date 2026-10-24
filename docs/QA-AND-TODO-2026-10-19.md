@@ -5,27 +5,47 @@
 
 # Hocomnia QA and improvement backlog
 
+Latest follow-up: see [24 October continuous-board audit](QA-AND-TODO-2026-10-24.md) for the endless painting, persistent station IDs, authoring repairs, cache isolation and current recommendations.
+
 Checked 19 October 2026 against `/Users/munchhausen/Projects/Hocomnia` and the site served at `http://localhost:4322`.
 
-## Runtime status
+## Park implementation update
+
+Approach 1 is implemented in the live Hocomnia checkout. The site now has cancellable Motion title plates, an illustrated About greeting, numbered résumé stations with editable commentary and related-destination detours, a destination/section index, content-aware magazine spreads, and Project Studio at `/studio`.
+
+The studio accepts Markdown/Markdoc, DOCX and text, previews the same editorial renderer used in the world, preserves source sections while reordering, exports `.mdoc`, and saves new local CMS drafts without overwriting existing entries. Actual browser verification converted a DOCX and a Markdown document into four spreads; moving Findings before Context persisted in the saved draft. Those QA-only draft files were removed after checking them, and were never public.
+
+Current checks: `npm test` passes; world fixtures have zero missing routes, dead links or duplicate IDs; new checks cover station uniqueness, spread geometry, source-preserving reorder and exclusive draft saving. Production build produces 79 pages. Browser checks confirm About greeting, a personal station, the gallery detour with continuing guide commentary, and editorial project content. Representative screenshots are in `docs/screenshots/park/`.
+
+Additional root repairs from visual verification: the camera canvas uses `overflow: clip` so focusing a guide control cannot scroll the world; deep links reveal their parent compositions; shared palette tokens now exist outside the illusion demo; magazine pages keep a 1.4 aspect ratio within arbitrary map fields. The controls start collapsed and link to Studio and CMS.
+
+Git metadata is currently present. The dev URL is pinned to 127.0.0.1:4322 with strict-port handling. The earlier port and repository warnings below describe the initial diagnosis; the earlier Vite reload issue was rechecked after restarting on the explicit port. A dependency/config restart briefly interrupted preview requests, then recovered.
+
+Remaining limits: career entries still need real data; PDF/PPTX/OCR remain unsupported; table/code/Word-layout fidelity is incomplete; very large studio previews can exceed browser session-storage quota; station URLs should receive immutable IDs before résumé reordering must preserve bookmarks. Frame-rate profiling and named CMS motion presets remain to do. See `docs/DE-STIJL-PARK-GUIDE.md` for the current workflow.
+
+## Initial runtime diagnosis
 
 - The requested local server is running from this Hocomnia directory (Astro process PID 70667) and the home page returns `200 OK`.
-- Browser accessibility inspection found the site map, page content, project links, and the live Illusion Controls panel rendered. The panel exposes labeled controls, help text, and copy/reset actions.
+- The first visual browser inspection showed a blank cream canvas even though the full map markup and colored cells existed in the DOM. `.cos` measured `0px` high because its unlayered `height: 100%` rule overrode the Tailwind `h-dvh` utility while `body` had no explicit height. The camera then fitted the zero-height canvas and scaled the map to roughly one pixel.
+- Fixed the root sizing rule in `src/styles/cosmos.css` to size the Cosmos scene to the viewport (`100dvh`). A fresh load measures `1280 × 720`; the Mondrian-style map with colored portfolio regions is visible across the canvas.
+- A fresh direct load of `/ideas` returns `200 OK`, has the expected title `Ideas — Hoc omnia nihil est`, shows the Ideas destination in the map HUD, and has a full-height canvas. The earlier open Chrome tab titled “Not found” was stale; the route is generated from current content and is not currently missing.
+- Browser accessibility inspection also found the site map, page content, project links, and live Illusion Controls panel. The panel exposes labeled controls, help text, and copy/reset actions.
 - Route smoke check returned `200` for `/`, `/projects/tesla/3`, `/ideas`, `/gallery/photo-1`, `/keystatic`, `/api/projects.json`, and `/sitemap.xml`.
 - `npm run build` succeeds and generates 71 static routes. The built output is 11 MB.
 - `npm test` passes: composition, document mapping, importing, and world integrity checks. The world check reports no missing routes, dead links, duplicate IDs, or undersized map regions across its sample and heavy fixtures.
 - A non-writing importer dry run converted `test/fixtures/report.html` into a four-slide outline successfully.
-- No breaking runtime or build failure was reproduced in this pass.
+- No current HTTP 400 or missing-home route was reproduced. The confirmed blank-page rendering defect is fixed. The Vite hot-reload WebSocket previously reported connection failures to ports 4322 and 4321; this affects development hot reload and should be rechecked separately, while a manual page reload receives the current site.
 
 ## Confirmed non-breaking issues
 
-1. **Starter copy is public-facing.** The visible home page currently contains `[Placeholder]` copy and `00%` / `$00M` figures across all five project documents, plus placeholder About and résumé entries. The gallery uses generic “Sample horizon study” captions. This is a content-completion issue rather than a rendering failure. The repository README itself identifies the projects as placeholders.
-2. **PDF and PowerPoint are not accepted by the import pipeline.** The current importer is a command-line tool for `.docx`, `.md`/`.mdoc`, `.txt`, and `.html`; DOCX parsing depends on the optional `mammoth` package. It converts supported sources into a project document and slide outline. There is no upload-and-preview flow, and direct `.pdf`/`.pptx` conversion is unsupported.
+1. **Starter copy is public-facing.** Project and résumé entries still contain `[Placeholder]` copy and `00%` / `$00M` figures across all five project documents, plus placeholder résumé entries. About now has the new introduction and guide greeting. The gallery uses generic “Sample horizon study” captions. This is a content-completion issue rather than a rendering failure. The repository README itself identifies the projects as placeholders.
+2. **PDF and PowerPoint remain unsupported.** Project Studio provides browser upload, preview, reordering and local CMS draft saving for Markdown, DOCX and text. Mammoth is now a required dependency and loads only when converting DOCX. PDF, PPTX and OCR still need format adapters, extraction diagnostics and review fixtures.
 3. **Motion settings require a manual publish handoff.** The live control panel can copy changed settings as JSON, but its documented workflow is to paste those values into the CMS content file/form. It does not save a tested preset directly into the CMS.
-4. **Two local Astro servers make the port ambiguous.** The requested site runs on 4322. Port 4321 is occupied by another Astro checkout at `/Users/munchhausen/Projects/illusional-site/hocomnia.com/hoc-omnia-site`, while the Hocomnia README points developers to 4321. Both can respond with a site bearing the same title, so opening the documented port may show the other checkout.
-5. **The build emits a large-client-chunk warning.** Astro warns about minified chunks over 500 kB. The main world bundle is about 744 kB and the particle-globe bundle about 589 kB; this is a load-time/performance concern, not a failed build. The complete `dist` tree is 11 MB.
-6. **Production canonical/feed URLs need configuration.** `astro.config.mjs` defaults `SITE_URL` to `https://example.com`. A deployment built without the real site URL can generate incorrect canonical and feed links.
-7. **This Hocomnia directory has no Git metadata.** Local editing and builds work, but this checkout cannot commit or push CMS changes. The README's GitHub-backed online editing mode depends on a GitHub repository and its deployment configuration.
+4. **Initial port ambiguity (resolved).** The requested site runs on 4322. Port 4321 is occupied by another Astro checkout at `/Users/munchhausen/Projects/illusional-site/hocomnia.com/hoc-omnia-site`, while the Hocomnia README points developers to 4321. Both can respond with a site bearing the same title, so opening the documented port may show the other checkout.
+5. **Initial Vite hot reload warning (rechecked).** The browser console reported WebSocket failures to 4322 and 4321, so source changes may require a manual reload during local development.
+6. **The build emits a large-client-chunk warning.** Astro warns about minified chunks over 500 kB. The current world bundle is approximately 807 KiB, the particle bundle 529 KiB and the lazy DOCX converter 292 KiB. Frame-time profiling and further splitting remain pending.
+7. **Production canonical/feed URLs need configuration.** `astro.config.mjs` defaults `SITE_URL` to `https://example.com`. A deployment built without the real site URL can generate incorrect canonical and feed links.
+8. **Initial missing Git metadata (resolved).** Git metadata is now present. Originally, Local editing and builds work, but this checkout cannot commit or push CMS changes. The README's GitHub-backed online editing mode depends on a GitHub repository and its deployment configuration.
 
 ## Prioritized to-do list
 
@@ -60,8 +80,8 @@ Checked 19 October 2026 against `/Users/munchhausen/Projects/Hocomnia` and the s
 
 - Choose one canonical checkout and document one unambiguous dev URL; detect a busy port instead of silently serving on the next port when that could open a different copy.
 - Require or validate `SITE_URL` for production builds so canonical URLs, RSS, and sitemap output cannot retain the example domain unnoticed.
-- Restore Git metadata or clearly label this directory as a source snapshot so CMS save/publish expectations are clear.
+- Document the current Git-backed CMS publishing setup; Git metadata is present.
 
 ## Verification limits
 
-The browser pass confirmed rendered content and the control panel's accessible structure. It did not exercise every camera gesture, publish a CMS edit, profile frame rate, or validate the PDF/PPTX upload experience because that intake flow does not exist yet. No source feature code was changed during this diagnosis; this file is the QA record and next-step list.
+The final browser pass covered About, station navigation, a gallery detour and return, desktop/390px editorial layouts, DOCX and Markdown imports, section reordering, local draft persistence through reload, rapid destination replacement, interruption by camera controls, and reduced-motion preview. Mobile navigation clears wrapped camera controls. No console errors were observed in these checked views. The viewport is refitted after rotation during a flight. This is not exhaustive device or gesture coverage; production CMS publishing, frame-rate profiling and PDF/PPTX conversion remain unverified or unimplemented. Final `npm test`, `npm run build` (79 pages), and `git diff --check` passed.

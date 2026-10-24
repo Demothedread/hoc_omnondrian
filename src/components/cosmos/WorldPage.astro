@@ -51,6 +51,6 @@ const canonical = Astro.site ? new URL(`${base}${route}`.replace(/\/{2,}/g, '/')
         {places.map((p) => <li><a href={`${base}${p.route}`}>{p.title}</a></li>)}
       </ul>
     </nav>
-    {isEditor && <IllusionAdmin target="world" title="Controls" />}
+    {isEditor && <IllusionAdmin target="world" title="Controls" open={false} />}
   </body>
 </html>

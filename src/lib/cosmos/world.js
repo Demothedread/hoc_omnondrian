@@ -1,3 +1,7 @@
+// DESCRIPTION: Composes portfolio content into deterministic navigable Mondrian world geometry.
+// INPUTS: Seed, CMS modules, project blocks and résumé stations.
+// OUTPUTS: World model, server-rendered map HTML and its complete route list.
+// DEPENDENCIES: Mondrian composer, editorial renderer and escaped content helpers.
 /**
  * cosmos/world.js — the map: a Mondrian world larger than any screen
  * ---------------------------------------------------------------------------
@@ -29,6 +33,7 @@ import { composeBSP, colourLeaves, insetRect } from './mondrian.js';
 import { escapeHtml, seededRandom, STIJL } from '../illusion/config.js';
 import { composeSection, renderSection, cardHTML } from '../stijl/compose.js';
 import { slideItems } from '../stijl/presentation.js';
+import { renderEditorialSpread, layoutEditorialPages } from '../stijl/editorial.js';
 
 /** Text tone per field colour: paper text on red and blue, ink on yellow and paper. */
 const FIELD_LIGHT_TEXT = new Set([STIJL.red, STIJL.blue]);
@@ -175,26 +180,23 @@ function projectInner(item, rect, route, base, seed) {
     if (item.format === 'report') entries.unshift({ id: 'report', weight: 2.4, tone: 'yellow' });
     else entries.push({ id: 'report', weight: 0.75, tone: 'yellow' });
   }
-  const nest = nestedSection({ entries, seed, box, accents: 0.3, autoColour: 0 });
-  const items = entries.map((e) => {
-    const r = nest.rects[e.id];
+  const pages = layoutEditorialPages(entries.length, box);
+  const items = entries.map((e, pageIndex) => {
+    const r = pages[pageIndex];
     const i = e.id === 'report' ? -1 : Number(e.id.slice(1)) - 1;
     if (e.id === 'report') {
       const rr = `${route}/report`;
       const inner = nestBox({ ...r, x: 0, y: 0 });
-      return { ...e, html: `<div class="cos-nested cos-kind-read" data-route="${rr}" data-read ${flyAttr(r)}>
+      return `<div class="park-project-page" style="left:${round(r.x-box.x)}px;top:${round(r.y-box.y)}px;width:${round(r.w)}px;height:${round(r.h)}px"><div class="cos-nested cos-kind-read" data-route="${rr}" data-read ${flyAttr(r)}>
         <a class="cos-nest-label" href="${linkTo(base, rr)}" data-route="${rr}">Read as report</a>
-        <article class="cos-read" style="${boxStyle(inner)}">${item.report}</article></div>` };
+        <article class="cos-read" style="${boxStyle(inner)}">${item.report}</article></div></div>`;
     }
     const sr = `${route}/${i + 1}`;
     const heading = slides[i].blocks.find((b) => b.type === 'heading')?.text ?? `Slide ${i + 1}`;
-    const slide = renderSection({
-      items: slideItems(slides[i], i), seed: seed + i * 7, wide: r.w / r.h, single: true, tag: 'div',
-      compose: { accents: 0.4, autoColour: 0.45, lineScale: lineScaleFor(r.w) },
-    });
-    return { ...e, html: `<a class="cos-slide" href="${linkTo(base, sr)}" data-route="${sr}" data-seq="${route}" data-i="${i}" ${flyAttr(r)} aria-label="Slide ${i + 1}: ${escapeHtml(heading)}">${slide}</a>` };
+    const slide = renderEditorialSpread(slides[i], { index: i, total: slides.length, title: item.title });
+    return `<div class="park-project-page" style="left:${round(r.x-box.x)}px;top:${round(r.y-box.y)}px;width:${round(r.w)}px;height:${round(r.h)}px"><div class="cos-slide" data-route="${sr}" data-seq="${route}" data-i="${i}" ${flyAttr(r)}><a class="cos-sr" href="${linkTo(base, sr)}" data-route="${sr}">Section ${i + 1}: ${escapeHtml(heading)}</a>${slide}</div></div>`;
   });
-  return `<div class="cos-nest" style="${boxStyle(box)}">${nest.html(items)}</div>`;
+  return `<div class="cos-nest park-project-pages" style="${boxStyle(box)}">${items.join('')}</div>`;
 }
 
 /** Cards (resumé entries, API endpoints) as a nested composition. */
@@ -203,6 +205,18 @@ function cardsInner(item, rect, seed) {
   const entries = (item.cards ?? []).map((c, k) => ({ id: `c${k}`, weight: c.weight ?? 1, tone: c.tone ?? 'auto' }));
   const nest = nestedSection({ entries, seed, box, accents: 0.3, autoColour: 0.3 });
   return `<div class="cos-nest" style="${boxStyle(box)}">${nest.html(item.cards.map((c, k) => ({ ...entries[k], html: cardHTML(c) })))}</div>`;
+}
+
+/** Every résumé entry is a numbered, deep-linkable station in its own field. */
+function journeyInner(item, rect, route, base, seed) {
+  const box = nestBox(rect);
+  if (!item.stations?.length) return '';
+  const entries = item.stations.map((s) => ({ id: s.id, weight: 1, tone: s.type === 'personal' ? 'yellow' : 'paper' }));
+  const nest = nestedSection({ entries, seed, box, accents: 0.18, autoColour: 0 });
+  return `<div class="cos-nest" style="${boxStyle(box)}">${nest.html(item.stations.map((s, i) => {
+    const stationRoute = `${route}/${s.id}`;
+    return { ...entries[i], html: `<article class="cos-station" data-route="${stationRoute}" data-seq="resume-stations" data-i="${s.index}" ${flyAttr(nest.rects[s.id])} data-station-type="${s.type}"><a class="park-station__marker" href="${linkTo(base, stationRoute)}" data-route="${stationRoute}" aria-label="Station ${s.index + 1}: ${escapeHtml(s.title)}">${String(s.index + 1).padStart(2, '0')}</a><div class="park-station__body" data-park-scroll tabindex="0"><p class="park-station__kicker">${escapeHtml(s.type)} · ${escapeHtml(s.dates || item.title)}</p><h3>${escapeHtml(s.title)}</h3><p class="park-station__org">${escapeHtml(s.org)}</p><p>${escapeHtml(s.note)}</p></div></article>` };
+  }))}</div>`;
 }
 
 /** Mondrian shards over a photo (in % of the field), each with its own fall. */
@@ -282,6 +296,7 @@ export function renderWorldHTML(model, { base = '/' } = {}) {
         let extra = '';
         if (kind === 'project') inner = projectInner(item, rect, itemRoute, base, seed);
         else if (kind === 'cards') inner = cardsInner(item, rect, seed);
+        else if (kind === 'journey') inner = journeyInner(item, rect, itemRoute, base, seed);
         else if (kind === 'read') { extra = ' data-read'; inner = `<article class="cos-read" style="${boxStyle(nestBox({ ...rect, x: 0, y: 0 }))}">${item.html ?? ''}</article>`; }
         else if (kind === 'photo') {
           const regionCentre = Math.hypot((l.x + l.w / 2) / R.w - 0.5, (l.y + l.h / 2) / R.h - 0.5);
@@ -322,6 +337,7 @@ export function worldRoutes(modules, siteTitle = 'Hoc omnia nihil est') {
         out.push({ route: `${r}/${i + 1}`, title: `${item.title}: ${h} — ${siteTitle}`, description: item.body ?? '' });
       });
       if (item.report) out.push({ route: `${r}/report`, title: `${item.title} (report) — ${siteTitle}`, description: item.body ?? '' });
+      for (const station of item.stations ?? []) out.push({ route: `${r}/${station.id}`, title: `${station.title} — ${siteTitle}`, description: station.note ?? '' });
     }
   }
   out.push({ route: 'singularity', title: `Singularity — ${siteTitle}`, description: '' });

@@ -1,0 +1,91 @@
+/* DESCRIPTION: Styles the shared De Stijl park, transient plates, station markers and host.
+   INPUTS: Park markup, destination state and Motion-driven transforms.
+   OUTPUTS: Responsive navigation, destination identities and accessible motion fallbacks.
+   DEPENDENCIES: Cosmos/analog palette tokens. */
+.cos-stage { position: absolute; inset: 0; transform-origin: 50% 55%; }
+.cos .cos-title,
+.cos.cos--analog .cos-title {
+  left: 50%; bottom: auto; top: 50%; translate: -50% -50%;
+  width: min(670px, 78vw); max-width: none; padding: 28px 38px 32px;
+  border: 8px solid #171715; border-radius: 5px; overflow: hidden;
+  background: linear-gradient(132deg, #fffef8 0%, #eeeee5 52%, #d8d9d1 100%);
+  box-shadow: inset 0 2px 0 #fff, inset 0 -4px 0 #a7a89e, 0 3px 0 #4d4e46, 0 15px 24px #0005;
+  pointer-events: none; transition: none; transform-origin: 50% 50%;
+}
+.cos .cos-title__text { font-size: clamp(34px, 5.9vw, 76px); letter-spacing: -0.045em; line-height: 0.97; text-wrap: balance; }
+.cos .cos-title__sub { font: 500 clamp(12px, 1.2vw, 17px)/1.45 var(--ill-text-font, sans-serif); max-width: 45ch; }
+.cos .cos-title .an-screw { display: block; }
+.park-plate__sheen { position: absolute; inset: -70% auto -70% -60%; width: 75%; rotate: 22deg; background: linear-gradient(90deg, transparent, #fff0 15%, #fff9 45%, #fffe 51%, #fff0 80%, transparent); mix-blend-mode: screen; pointer-events: none; }
+.cos.has-title.is-receded .cos-title,
+.cos.is-deep.has-title.is-receded .cos-title { opacity: 0; pointer-events: none; }
+.park-ui { position: absolute; inset: 0; z-index: 35; pointer-events: none; font: 500 13px/1.35 var(--ill-text-font, sans-serif); }
+.park-ui [hidden] { display: none !important; }
+.park-ui a { color: inherit; text-decoration: none; }
+.park-ui button, .park-ui summary, .park-ui a { pointer-events: auto; }
+.park-ui :is(button,summary,a):focus-visible { outline: 3px solid var(--ill-blue); outline-offset: 4px; }
+.park-directory, .park-index { position: absolute; top: var(--park-nav-top, calc(var(--an-bezel, 14px) + 66px)); left: calc(var(--an-bezel, 14px) + 14px); max-width: min(330px, calc(100vw - 56px)); pointer-events: auto; }
+.park-index { left: calc(var(--an-bezel, 14px) + 135px); }
+.park-ui summary { list-style: none; cursor: pointer; padding: 9px 12px; min-height: 38px; background: #eeeeeaf2; border: 2px solid #151513; box-shadow: inset 0 1px white, 0 3px #0006; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.park-ui summary::-webkit-details-marker { display: none; }
+.park-directory summary { display: flex; gap: 18px; }
+.park-ui details[open] { z-index: 3; box-shadow: 0 14px 30px #0005; }
+.park-ui nav { max-height: min(62dvh, 460px); overflow-y: auto; background: #eeeeea; border: 2px solid #171715; border-top: 0; }
+.park-ui nav a { display: flex; gap: 18px; align-items: center; padding: 13px 16px; min-height: 44px; border-bottom: 1px solid #0003; }
+.park-ui nav a:hover, .park-ui nav a[aria-current] { background: var(--ill-yellow, #f5d316); }
+.park-ui nav a span { font: 11px var(--an-mono, monospace); }
+.park-directory nav { min-width: 230px; }
+.park-index nav { min-width: min(310px, 72vw); }
+.park-journey { position: absolute; bottom: calc(var(--an-bezel, 14px) + 26px); left: calc(var(--an-bezel, 14px) + 15px); display: flex; align-items: center; gap: 7px; max-width: min(620px, calc(100vw - 56px)); background: #eeeeeaf5; padding: 10px; border: 3px solid #111; box-shadow: 0 4px #0006; pointer-events: auto; }
+.park-journey > div { padding: 0 10px; min-width: 120px; }
+.park-journey span { display: block; font: 9px var(--an-mono, monospace); letter-spacing: .06em; margin-bottom: 4px; }
+.park-journey strong { display: block; max-width: 30ch; font-size: 12px; }
+.park-journey button { min-height: 42px; padding: 9px 13px; background: var(--ill-yellow); border: 2px solid #111; cursor: pointer; font: 700 11px var(--ill-text-font,sans-serif); }
+.park-journey button:disabled { opacity: .35; cursor: default; }
+.park-host { position: absolute; right: 26px; bottom: 44px; width: 440px; height: 300px; pointer-events: none; transform-origin: 90% 100%; }
+.park-host > img { position: absolute; right: -14px; bottom: -25px; width: 210px; height: 315px; object-fit: contain; filter: drop-shadow(3px 9px 3px #0003); }
+.park-host__bubble { position: absolute; top: 18px; left: 0; width: 252px; padding: 18px 20px; background: #fffef8; border: 3px solid #171715; box-shadow: 5px 6px 0 #171715; pointer-events: auto; }
+.park-host__bubble::after { content: ''; position: absolute; right: -13px; top: 38px; width: 20px; height: 20px; background: #fffef8; border-right: 3px solid #171715; border-top: 3px solid #171715; transform: rotate(45deg); }
+.park-host__bubble > button { position: absolute; right: 4px; top: 1px; width: 30px; height: 30px; background: transparent; border: 0; font-size: 20px; cursor: pointer; }
+.park-host__bubble p { margin: 8px 0; }
+.park-host__eyebrow { font: 9px var(--an-mono, monospace); text-transform: uppercase; letter-spacing: .04em; }
+.park-host__bubble a { display: inline-block; font-weight: 800; border-bottom: 2px solid var(--ill-blue); padding: 7px 0 3px; }
+.park-host-toggle { position: absolute; bottom: 42px; right: 28px; min-height: 44px; background: var(--ill-yellow); border: 3px solid #111; padding: 8px 14px; font-weight: 700; cursor: pointer; }
+.cos-nest .stijl__item:has(> .cos-station) { padding: 0; }
+.cos-station { position: absolute; inset: 0; container-type: size; color: #151513; overflow: hidden; background: var(--ill-paper); }
+.cos-station[data-station-type="personal"] { background: var(--ill-yellow); }
+.park-station__marker { position: absolute; top: 5%; right: 5%; width: 13cqi; aspect-ratio: 1; display: grid; place-items: center; background: var(--ill-red); border: .7cqi solid #111; color: #fff; font: 800 6cqi/1 var(--ill-display,sans-serif); box-shadow: .6cqi .7cqi #111; text-decoration: none; z-index: 2; }
+.park-station__body { position: absolute; inset: 8% 7%; padding-top: 18cqi; overflow: hidden; font: 400 3cqi/1.5 var(--ill-text-font,sans-serif); }
+.cos-station.is-current .park-station__body { overflow-y: auto; overscroll-behavior: contain; font-size: calc(18px / var(--read-s,1)); }
+.cos-station.is-current .park-station__body h3 { font-size: min(8cqi, calc(80px / var(--read-s,1))); }
+.cos-station.is-current .park-station__body .park-station__kicker { font-size: calc(11px / var(--read-s,1)); }
+.park-station__body h3 { font: 800 8cqi/.98 var(--ill-display,sans-serif); margin: 3cqi 0; max-width: 16ch; }
+.park-station__body p { margin: 1.5cqi 0; }
+.park-station__body .park-station__kicker { font: 600 1.8cqi var(--an-mono,monospace); text-transform: uppercase; }
+.park-station__org { font-weight: 700; }
+.cos[data-destination="ideas"] .is-current .cos-read { border-left: calc(5px / var(--read-s,1)) solid var(--ill-blue); padding-left: 5%; animation: park-print .65s ease-out; }
+.cos[data-destination="about"] .is-current .cos-read { border-top: calc(7px / var(--read-s,1)) solid var(--ill-red); }
+.cos[data-destination="api"] .is-current .stijl__item { animation: park-link .5s ease-out both; animation-delay: calc(var(--step,0) * 35ms); }
+.cos-station.is-current .park-station__marker { animation: park-stamp .65s cubic-bezier(.2,.8,.2,1.2); }
+.cos.in-journey .cos-hint { display: none; }
+@keyframes park-print { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+@keyframes park-stamp { from { transform: scale(1.5) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes park-link { from { filter: brightness(1.35); } to { filter: brightness(1); } }
+@media (max-width: 760px) {
+  .cos .cos-title, .cos.cos--analog .cos-title { width: 83vw; padding: 24px; border-width: 6px; }
+  .park-directory, .park-index { top: var(--park-nav-top, 176px); }
+  .park-host { width: 330px; height: 230px; right: 8px; bottom: 112px; }
+  .park-host > img { width: 150px; height: 225px; right: -10px; }
+  .park-host__bubble { width: 220px; top: 0; left: 0; padding: 12px 15px; font-size: 11px; }
+  .park-journey { bottom: 26px; left: 18px; right: 18px; max-width: none; gap: 5px; }
+  .park-journey > div { min-width: 0; padding: 0 4px; flex: 1; }
+  .park-journey strong { max-width: 19ch; font-size: 10px; }
+  .park-journey span { font-size: 8px; }
+  .park-journey button { padding-inline: 9px; }
+  .park-host-toggle { bottom: 115px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cos-stage, .cos-station *, .park-host, .cos-read, .stijl__item { animation: none !important; }
+  .park-plate__sheen { display: none; }
+}
+.cos.is-reduced-motion :is(.cos-stage,.cos-station *,.park-host,.cos-read,.stijl__item) { animation: none !important; }
+.cos.is-reduced-motion .park-plate__sheen { display: none; }

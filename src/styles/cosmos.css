@@ -1,3 +1,8 @@
+/* DESCRIPTION: Styles the Cosmos portfolio map, camera layers, title card, HUD and effects.
+   INPUTS: Cosmos DOM class names, theme tokens, and camera custom properties.
+   OUTPUTS: Full viewport map layout and presentation styles consumed by the page.
+   DEPENDENCIES: illusion.css theme tokens and Cosmos markup in src/lib/cosmos/cosmos.js.
+   ========================================================================== */
 /* ==========================================================================
    cosmos.css — the world, its camera layers, title card, HUD and the hole
    --------------------------------------------------------------------------
@@ -13,10 +18,13 @@
   --cos-ink: var(--ill-ink, #000);
   --cos-paper: var(--ill-paper, #eeeeea);
   position: relative;
-  overflow: hidden;
+  /* Focus must never scroll the world itself; the camera owns its viewport. */
+  overflow: clip;
   isolation: isolate;
-  height: 100%;
-  min-height: 100%;
+  /* This component is mounted as a viewport scene; percent height collapsed
+     because the body has no explicit height and overrode Tailwind's h-dvh. */
+  height: 100dvh;
+  min-height: 100dvh;
   background: var(--cos-ink);
   touch-action: none;              /* we handle pan and pinch ourselves */
   font-family: var(--ill-text-font, system-ui, sans-serif);
@@ -49,6 +57,23 @@
 }
 
 /* ---------- World plane ------------------------------------------------ */
+.cos-map-placeholder { position: absolute; inset: 0; pointer-events: none; }
+.cos-map-placeholder svg { width: 100%; height: 100%; }
+/* Show a fitted painting while modules load, rather than one enormous paper field. */
+.cos-plane:not([style*="transform"]) { visibility: hidden; }
+.cos-plane[style*="transform"] + .cos-map-placeholder { display: none; }
+.cos-continuum {
+  position: absolute;
+  inset: -100%;
+  pointer-events: none;
+  background-color: #111;
+  background-repeat: repeat;
+  /* Offset compensates for the oversized surface, keeping its origin at the viewport. */
+  background-origin: content-box;
+  padding: 100dvh 100vw;
+  background-clip: border-box;
+  transform-origin: 50% 50%;
+}
 .cos-plane {
   position: absolute;
   left: 0;
